@@ -47,7 +47,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChild(child: InsertChild): Promise<Child> {
-    const [newChild] = await db.insert(children).values(child).returning();
+    const [newChild] = await db
+      .insert(children)
+      .values({
+        ...child,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    if (!newChild) {
+      throw new Error("Failed to create child profile");
+    }
+
     return newChild;
   }
 

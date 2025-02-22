@@ -28,10 +28,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertChildSchema, type InsertChild, AvatarConfig } from "@shared/schema";
+import { insertChildSchema, type InsertChild, type AvatarConfig } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
+import { useAuth } from "@/hooks/use-auth";
 
 // Avatar options remain the same
 const avatarTypes = [
@@ -66,6 +67,7 @@ const defaultAvatar: AvatarConfig = {
 export default function ChildDetailsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [previewConfig, setPreviewConfig] = useState<AvatarConfig>(defaultAvatar);
@@ -77,6 +79,7 @@ export default function ChildDetailsPage() {
       lastName: "",
       dateOfBirth: new Date().toISOString().split('T')[0],
       gender: "",
+      parentId: user?.id || 0,
       medicalHistory: {},
       schoolInformation: {},
       avatar: defaultAvatar,
@@ -99,14 +102,23 @@ export default function ChildDetailsPage() {
 
   const createChild = useMutation({
     mutationFn: async (data: InsertChild) => {
-      const response = await apiRequest("POST", "/api/children", {
+      if (!user?.id) {
+        throw new Error("You must be logged in to create a child profile");
+      }
+
+      const processedData = {
         ...data,
+        parentId: user.id,
         dateOfBirth: new Date(data.dateOfBirth),
         avatar: {
-          ...data.avatar,
+          type: data.avatar?.type || defaultAvatar.type,
+          color: data.avatar?.color || defaultAvatar.color,
           accessories: selectedAccessories,
+          name: data.avatar?.name || defaultAvatar.name,
         },
-      });
+      };
+
+      const response = await apiRequest("POST", "/api/children", processedData);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Failed to create child profile");
@@ -116,8 +128,8 @@ export default function ChildDetailsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/children"] });
       toast({
-        title: "Success",
-        description: "Child profile created successfully",
+        title: "Profile Created",
+        description: "Child profile has been created successfully.",
       });
       navigate("/");
     },
@@ -143,13 +155,7 @@ export default function ChildDetailsPage() {
 
   const onSubmit = async (data: InsertChild) => {
     try {
-      await createChild.mutateAsync({
-        ...data,
-        avatar: {
-          ...data.avatar,
-          accessories: selectedAccessories,
-        },
-      });
+      await createChild.mutateAsync(data);
     } catch (error) {
       console.error("Form submission error:", error);
     }
@@ -223,7 +229,6 @@ export default function ChildDetailsPage() {
                         <Input
                           type="date"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -378,8 +383,17 @@ export default function ChildDetailsPage() {
             className="w-full"
             disabled={createChild.isPending}
           >
-            <Save className="h-4 w-4 mr-2" />
-            {createChild.isPending ? "Creating Profile..." : "Create Profile"}
+            {createChild.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Profile...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Create Profile
+              </>
+            )}
           </Button>
         </form>
       </Form>

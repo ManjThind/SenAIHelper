@@ -36,7 +36,20 @@ export const children = pgTable("children", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Assessments table with enhanced fields
+// Add writing analysis interface
+export interface WritingAnalysisData {
+  text: string;
+  analysis: {
+    complexity: string;
+    organization: string;
+    handwriting: string;
+    grammarAndSpelling: string;
+    recommendations: string[];
+  };
+  timestamp: string;
+}
+
+// Update assessments table
 export const assessments = pgTable("assessments", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -47,6 +60,7 @@ export const assessments = pgTable("assessments", {
   facialAnalysisData: jsonb("facial_analysis_data"),
   questionnaireData: jsonb("questionnaire_data"),
   voiceAnalysisData: jsonb("voice_analysis_data"),
+  writingAnalysisData: jsonb("writing_analysis_data").$type<WritingAnalysisData>(),
   status: text("status").notNull().default("in_progress"),
   notes: text("notes"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
