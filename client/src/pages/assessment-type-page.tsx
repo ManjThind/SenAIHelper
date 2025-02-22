@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -7,11 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Mic, Camera, Brain, ArrowLeft, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useState } from "react";
+import { Child } from "@shared/schema";
 
 const assessmentTypes = [
   {
@@ -48,13 +57,28 @@ export default function AssessmentTypePage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [selectedChild, setSelectedChild] = useState<string>("");
+
+  // Fetch children list
+  const { data: children } = useQuery<Child[]>({
+    queryKey: ["/api/children"],
+  });
 
   const createAssessment = useMutation({
     mutationFn: async (assessmentType: string) => {
+      if (!selectedChild) {
+        throw new Error("Please select a child first");
+      }
+      const child = children?.find(c => c.id.toString() === selectedChild);
+      if (!child) {
+        throw new Error("Selected child not found");
+      }
+
       const res = await apiRequest("POST", "/api/assessments", {
         userId: user?.id,
-        childName: "Test Child", // This should come from a form
-        childAge: 5, // This should come from a form
+        childId: parseInt(selectedChild),
+        childName: `${child.firstName} ${child.lastName}`,
+        childAge: Math.floor((new Date().getTime() - new Date(child.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)),
         status: "in_progress",
         type: assessmentType
       });
@@ -67,10 +91,10 @@ export default function AssessmentTypePage() {
       });
       navigate(`/assessment/${assessment.id}`);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Could not create assessment",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -99,11 +123,41 @@ export default function AssessmentTypePage() {
         </div>
       </div>
 
+      {/* Child Selection */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Select Child</CardTitle>
+          <CardDescription>Choose the child to assess</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={selectedChild}
+            onValueChange={setSelectedChild}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a child" />
+            </SelectTrigger>
+            <SelectContent>
+              {children?.map((child) => (
+                <SelectItem key={child.id} value={child.id.toString()}>
+                  {child.firstName} {child.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {!children?.length && (
+            <p className="text-sm text-muted-foreground mt-2">
+              No children profiles found. <Link href="/child/new" className="text-primary hover:underline">Add a child profile</Link> first.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {assessmentTypes.map((type) => (
           <Card 
             key={type.id} 
-            className="hover:bg-accent/5 transition-colors cursor-pointer"
+            className={`hover:bg-accent/5 transition-colors cursor-pointer ${!selectedChild ? 'opacity-50 pointer-events-none' : ''}`}
             onClick={() => handleTypeSelect(type.id)}
           >
             <CardHeader>
