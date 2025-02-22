@@ -14,6 +14,7 @@ import InteractiveAssessmentPage from "@/pages/interactive-assessment-page";
 import AssessmentTypePage from "@/pages/assessment-type-page";
 import ChildDetailsPage from "@/pages/child-details-page";
 import ChildrenListPage from "@/pages/children-list-page";
+import AccessoryShopPage from "@/pages/accessory-shop-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
       <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <ProtectedRoute path="/children" component={ChildrenListPage} />
+      <ProtectedRoute path="/shop" component={AccessoryShopPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

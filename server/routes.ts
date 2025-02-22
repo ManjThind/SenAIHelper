@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertAssessmentSchema, insertReportSchema, insertChildSchema } from "@shared/schema";
+import { insertAssessmentSchema, insertReportSchema, insertChildSchema, shopItems, ownedItems } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -110,6 +112,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const report = await storage.getReportByAssessmentId(parseInt(req.params.assessmentId));
     if (!report) return res.sendStatus(404);
     res.json(report);
+  });
+
+  // New Shop Routes
+  app.get("/api/shop/items", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const items = await db.select().from(shopItems);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch shop items" });
+    }
+  });
+
+  app.get("/api/shop/owned-items", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const items = await db
+        .select()
+        .from(ownedItems)
+        .where(eq(ownedItems.userId, req.user.id));
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch owned items" });
+    }
+  });
+
+  app.post("/api/shop/purchase", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { itemId } = req.body;
+      if (!itemId) {
+        return res.status(400).json({ error: "Item ID is required" });
+      }
+
+      // Check if the item exists
+      const [item] = await db
+        .select()
+        .from(shopItems)
+        .where(eq(shopItems.id, itemId));
+
+      if (!item) {
+        return res.status(404).json({ error: "Item not found" });
+      }
+
+      // Check if user already owns this item
+      const [existingOwnership] = await db
+        .select()
+        .from(ownedItems)
+        .where(eq(ownedItems.itemId, itemId))
+        .where(eq(ownedItems.userId, req.user.id));
+
+      if (existingOwnership) {
+        return res.status(400).json({ error: "You already own this item" });
+      }
+
+      // Add the item to user's owned items
+      const [newOwnedItem] = await db
+        .insert(ownedItems)
+        .values({
+          userId: req.user.id,
+          itemId: itemId,
+          acquiredAt: new Date(),
+        })
+        .returning();
+
+      res.status(201).json(newOwnedItem);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to purchase item" });
+    }
   });
 
   const httpServer = createServer(app);

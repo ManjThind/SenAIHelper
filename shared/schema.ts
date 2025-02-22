@@ -64,6 +64,38 @@ export const reports = pgTable("reports", {
   status: text("status").notNull().default("active"),
 });
 
+// Add shop-related interfaces
+export interface ShopItem {
+  id: string;
+  name: string;
+  type: "glasses" | "hat" | "bowtie" | "cape";
+  price: number;
+  description: string;
+  isFreeWeekly: boolean;
+  weekStartDate?: Date;
+  weekEndDate?: Date;
+}
+
+// Add shop tables
+export const shopItems = pgTable("shop_items", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  price: integer("price").notNull(),
+  description: text("description").notNull(),
+  isFreeWeekly: boolean("is_free_weekly").notNull().default(false),
+  weekStartDate: timestamp("week_start_date"),
+  weekEndDate: timestamp("week_end_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const ownedItems = pgTable("owned_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  itemId: integer("item_id").notNull(),
+  acquiredAt: timestamp("acquired_at").notNull().defaultNow(),
+});
+
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   children: many(children),
@@ -102,6 +134,23 @@ export const reportsRelations = relations(reports, ({ one }) => ({
   }),
 }));
 
+// Add relations
+export const shopItemsRelations = relations(shopItems, ({ many }) => ({
+  ownedItems: many(ownedItems),
+}));
+
+export const ownedItemsRelations = relations(ownedItems, ({ one }) => ({
+  user: one(users, {
+    fields: [ownedItems.userId],
+    references: [users.id],
+  }),
+  item: one(shopItems, {
+    fields: [ownedItems.itemId],
+    references: [shopItems.id],
+  }),
+}));
+
+
 // Define types for our questionnaire and voice analysis data
 export interface QuestionnaireData {
   eyeContact?: string;
@@ -136,6 +185,10 @@ export const insertReportSchema = createInsertSchema(reports, {
   dateGenerated: z.coerce.date(),
 });
 
+// Create insert schemas for new tables
+export const insertShopItemSchema = createInsertSchema(shopItems);
+export const insertOwnedItemSchema = createInsertSchema(ownedItems);
+
 // Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertChild = z.infer<typeof insertChildSchema>;
@@ -146,3 +199,9 @@ export type User = typeof users.$inferSelect;
 export type Child = typeof children.$inferSelect;
 export type Assessment = typeof assessments.$inferSelect;
 export type Report = typeof reports.$inferSelect;
+
+// Export types for new tables
+export type InsertShopItem = z.infer<typeof insertShopItemSchema>;
+export type InsertOwnedItem = z.infer<typeof insertOwnedItemSchema>;
+export type ShopItemSelect = typeof shopItems.$inferSelect;
+export type OwnedItemSelect = typeof ownedItems.$inferSelect;

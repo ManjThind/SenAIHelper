@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users } from "lucide-react";
+import { LogOut, Users, ShoppingBag } from "lucide-react";
 import { Link } from "wouter";
 
 export function Nav() {
@@ -15,6 +15,12 @@ export function Nav() {
             <Button variant="ghost" size="sm" className="flex items-center">
               <Users className="h-4 w-4 mr-2" />
               Children
+            </Button>
+          </Link>
+          <Link href="/shop">
+            <Button variant="ghost" size="sm" className="flex items-center">
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Accessory Shop
             </Button>
           </Link>
         </div>
