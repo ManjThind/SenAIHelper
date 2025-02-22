@@ -140,13 +140,20 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* Right side with centered logo */}
-      <div className="hidden lg:flex items-center justify-center bg-primary/5">
+      {/* Right side with centered logo and text */}
+      <div className="hidden lg:flex flex-col items-center justify-center bg-primary/5">
         <img
           src="/SiliconSquaresLogoContact.png"
           alt="Silicon Squares Logo"
-          className="w-48 h-48 object-contain"
+          className="w-48 h-48 object-contain mb-4"
         />
+        <h1 className="text-4xl font-bold mb-4">
+          AI-Powered SEN Assessment Tool
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-md text-center">
+          Helping identify early signs of autism and ADHD through advanced facial
+          analysis and behavioral assessment.
+        </p>
       </div>
     </div>
   );
