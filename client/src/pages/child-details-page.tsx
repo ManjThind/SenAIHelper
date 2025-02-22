@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertChildSchema, type InsertChild } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ArrowLeft } from "lucide-react";
+import { AvatarPreview } from "@/components/ui/avatar-preview";
 
 const avatarTypes = [
   { id: "robot", name: "Robot" },
@@ -58,6 +59,12 @@ export default function ChildDetailsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
+  const [previewConfig, setPreviewConfig] = useState({
+    type: "robot",
+    color: "blue",
+    accessories: [] as string[],
+    name: "",
+  });
 
   const form = useForm<InsertChild>({
     resolver: zodResolver(insertChildSchema),
@@ -76,6 +83,18 @@ export default function ChildDetailsPage() {
       },
     },
   });
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (value.avatar) {
+        setPreviewConfig({
+          ...value.avatar,
+          accessories: selectedAccessories,
+        });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch, selectedAccessories]);
 
   const createChild = useMutation({
     mutationFn: async (data: InsertChild) => {
@@ -240,6 +259,10 @@ export default function ChildDetailsPage() {
           <CardContent>
             <Form {...form}>
               <form className="space-y-6">
+                <div className="flex justify-center mb-6">
+                  <AvatarPreview config={previewConfig} size="lg" />
+                </div>
+
                 <FormField
                   control={form.control}
                   name="avatar.type"
@@ -247,7 +270,13 @@ export default function ChildDetailsPage() {
                     <FormItem>
                       <FormLabel>Character Type</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setPreviewConfig((prev) => ({
+                            ...prev,
+                            type: value,
+                          }));
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -275,7 +304,13 @@ export default function ChildDetailsPage() {
                     <FormItem>
                       <FormLabel>Color Theme</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setPreviewConfig((prev) => ({
+                            ...prev,
+                            color: value,
+                          }));
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl>
