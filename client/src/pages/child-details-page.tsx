@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,11 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertChildSchema, type InsertChild, AvatarConfig } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Save } from "lucide-react";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
 
+// Avatar options remain the same
 const avatarTypes = [
   { id: "robot", name: "Robot" },
   { id: "animal", name: "Animal" },
@@ -65,6 +66,7 @@ const defaultAvatar: AvatarConfig = {
 export default function ChildDetailsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
   const [previewConfig, setPreviewConfig] = useState<AvatarConfig>(defaultAvatar);
 
@@ -97,27 +99,32 @@ export default function ChildDetailsPage() {
 
   const createChild = useMutation({
     mutationFn: async (data: InsertChild) => {
-      const res = await apiRequest("POST", "/api/children", {
+      const response = await apiRequest("POST", "/api/children", {
         ...data,
+        dateOfBirth: new Date(data.dateOfBirth),
         avatar: {
           ...data.avatar,
           accessories: selectedAccessories,
         },
       });
-      return res.json();
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create child profile");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/children"] });
       toast({
-        title: "Child Profile Created",
-        description: "The child profile has been created successfully",
+        title: "Success",
+        description: "Child profile created successfully",
       });
       navigate("/");
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Could not create child profile",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -134,11 +141,18 @@ export default function ChildDetailsPage() {
     });
   };
 
-  const onSubmit = (data: InsertChild) => {
-    createChild.mutate({
-      ...data,
-      dateOfBirth: new Date(data.dateOfBirth), // Convert string to Date
-    });
+  const onSubmit = async (data: InsertChild) => {
+    try {
+      await createChild.mutateAsync({
+        ...data,
+        avatar: {
+          ...data.avatar,
+          accessories: selectedAccessories,
+        },
+      });
+    } catch (error) {
+      console.error("Form submission error:", error);
+    }
   };
 
   return (
@@ -160,17 +174,17 @@ export default function ChildDetailsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>
-              Enter the child's personal details
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+                <CardDescription>
+                  Enter the child's personal details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -209,7 +223,7 @@ export default function ChildDetailsPage() {
                         <Input
                           type="date"
                           {...field}
-                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -242,26 +256,17 @@ export default function ChildDetailsPage() {
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
 
-                <Button type="submit" className="w-full">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Profile
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Avatar Customization</CardTitle>
-            <CardDescription>
-              Personalize the child's virtual character
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Avatar Customization</CardTitle>
+                <CardDescription>
+                  Personalize the child's virtual character
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="flex justify-center mb-6">
                   <AvatarPreview config={previewConfig} size="lg" />
                 </div>
@@ -364,20 +369,20 @@ export default function ChildDetailsPage() {
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+          </div>
 
-                <Button
-                  type="submit"
-                  onClick={form.handleSubmit(onSubmit)}
-                  className="w-full"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Create Profile with Avatar
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+          <Button 
+            type="submit"
+            className="w-full"
+            disabled={createChild.isPending}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {createChild.isPending ? "Creating Profile..." : "Create Profile"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }
