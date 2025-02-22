@@ -151,105 +151,104 @@ export default function VoiceAnalysisPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/assessment/${id}`)}
-          className="mr-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Assessment
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Voice Analysis</h1>
-          <p className="text-muted-foreground">
-            Record and analyze speech patterns
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8">
+        <div className="flex items-center mb-8 pb-6 border-b">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(`/assessment/${id}`)}
+            className="mr-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            Voice Analysis
+          </h1>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Voice Recording</CardTitle>
-            <CardDescription>
-              Record speech samples for analysis
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={isRecording ? stopRecording : startRecording}
-              variant={isRecording ? "destructive" : "default"}
-              className="w-full"
-              disabled={!voiceAnalysisReady}
-            >
-              {isRecording ? (
-                <>
-                  <Square className="mr-2 h-4 w-4" />
-                  Stop Recording
-                </>
-              ) : (
-                <>
-                  <Mic className="mr-2 h-4 w-4" />
-                  Start Recording
-                </>
-              )}
-            </Button>
+        <div className="grid grid-cols-1 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Voice Recording</CardTitle>
+              <CardDescription>
+                Record speech samples for analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={isRecording ? stopRecording : startRecording}
+                variant={isRecording ? "destructive" : "default"}
+                className="w-full"
+                disabled={!voiceAnalysisReady}
+              >
+                {isRecording ? (
+                  <>
+                    <Square className="mr-2 h-4 w-4" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="mr-2 h-4 w-4" />
+                    Start Recording
+                  </>
+                )}
+              </Button>
 
-            {voiceMetrics && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Volume</span>
-                    <span>{Math.round(voiceMetrics.volume)}%</span>
-                  </div>
-                  <Progress value={voiceMetrics.volume} />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Clarity</span>
-                    <span>{Math.round(voiceMetrics.clarity)}%</span>
-                  </div>
-                  <Progress value={voiceMetrics.clarity} />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Speaking Rate</span>
-                    <p className="font-medium">{voiceMetrics.speakingRate} words/min</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Word Count</span>
-                    <p className="font-medium">{voiceMetrics.wordCount} words</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Pauses</span>
-                    <p className="font-medium">{voiceMetrics.pauseCount} detected</p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">Pitch</span>
-                    <p className="font-medium">{Math.round(voiceMetrics.pitch)}Hz</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {assessment?.voiceAnalysisData?.recordings?.length > 0 && (
-              <div className="space-y-2">
-                <Label>Recorded Samples</Label>
-                <div className="space-y-2">
-                  {assessment.voiceAnalysisData.recordings.map((recording, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <audio src={recording} controls className="w-full" />
+              {voiceMetrics && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Volume</span>
+                      <span>{Math.round(voiceMetrics.volume)}%</span>
                     </div>
-                  ))}
+                    <Progress value={voiceMetrics.volume} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Clarity</span>
+                      <span>{Math.round(voiceMetrics.clarity)}%</span>
+                    </div>
+                    <Progress value={voiceMetrics.clarity} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Speaking Rate</span>
+                      <p className="font-medium">{voiceMetrics.speakingRate} words/min</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Word Count</span>
+                      <p className="font-medium">{voiceMetrics.wordCount} words</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Pauses</span>
+                      <p className="font-medium">{voiceMetrics.pauseCount} detected</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Pitch</span>
+                      <p className="font-medium">{Math.round(voiceMetrics.pitch)}Hz</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+
+              {assessment?.voiceAnalysisData?.recordings?.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Recorded Samples</Label>
+                  <div className="space-y-2">
+                    {assessment.voiceAnalysisData.recordings.map((recording, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <audio src={recording} controls className="w-full" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
