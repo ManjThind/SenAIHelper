@@ -100,8 +100,9 @@ export default function HomePage() {
             </CardHeader>
           </Card>
         </Link>
-        <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
-          <Link href="/child/new">
+
+        <Link href="/child/new">
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center create-child-button">
                 <Plus className="h-5 w-5 mr-2 text-primary" />
@@ -109,8 +110,8 @@ export default function HomePage() {
               </CardTitle>
               <CardDescription>Create a new child profile</CardDescription>
             </CardHeader>
-          </Link>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       {/* Statistics Cards */}
