@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -8,6 +9,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mic, Camera, Brain, ArrowLeft, Activity } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 const assessmentTypes = [
   {
@@ -42,6 +46,39 @@ const assessmentTypes = [
 
 export default function AssessmentTypePage() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const createAssessment = useMutation({
+    mutationFn: async (assessmentType: string) => {
+      const res = await apiRequest("POST", "/api/assessments", {
+        userId: user?.id,
+        childName: "Test Child", // This should come from a form
+        childAge: 5, // This should come from a form
+        status: "in_progress",
+        type: assessmentType
+      });
+      return res.json();
+    },
+    onSuccess: (assessment) => {
+      toast({
+        title: "Assessment Created",
+        description: "Starting your new assessment session",
+      });
+      navigate(`/assessment/${assessment.id}`);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not create assessment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleTypeSelect = (typeId: string) => {
+    createAssessment.mutate(typeId);
+  };
 
   return (
     <div className="container mx-auto py-8">
@@ -64,17 +101,19 @@ export default function AssessmentTypePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {assessmentTypes.map((type) => (
-          <Link key={type.id} href={`/assessment/new/${type.id}`}>
-            <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <type.icon className={`h-5 w-5 mr-2 ${type.color}`} />
-                  {type.title}
-                </CardTitle>
-                <CardDescription>{type.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          <Card 
+            key={type.id} 
+            className="hover:bg-accent/5 transition-colors cursor-pointer"
+            onClick={() => handleTypeSelect(type.id)}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <type.icon className={`h-5 w-5 mr-2 ${type.color}`} />
+                {type.title}
+              </CardTitle>
+              <CardDescription>{type.description}</CardDescription>
+            </CardHeader>
+          </Card>
         ))}
       </div>
     </div>
