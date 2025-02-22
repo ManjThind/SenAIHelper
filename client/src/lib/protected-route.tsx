@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { Nav } from "@/components/nav";
 
 export function ProtectedRoute({
   path,
@@ -29,5 +30,12 @@ export function ProtectedRoute({
     );
   }
 
-  return <Component />
+  return (
+    <Route path={path}>
+      <div className="min-h-screen flex flex-col">
+        <Nav />
+        <Component />
+      </div>
+    </Route>
+  );
 }
