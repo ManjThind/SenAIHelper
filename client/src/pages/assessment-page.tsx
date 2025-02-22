@@ -26,8 +26,6 @@ export default function AssessmentPage() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -48,30 +46,12 @@ export default function AssessmentPage() {
     },
   });
 
-  useEffect(() => {
-    const initAudio = async () => {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const analyserNode = audioCtx.createAnalyser();
-        analyserNode.fftSize = 2048;
-        setAudioContext(audioCtx);
-        setAnalyser(analyserNode);
-      } catch (err) {
-        toast({
-          title: "Audio Setup Error",
-          description: "Could not initialize audio analysis",
-          variant: "destructive",
-        });
-      }
-    };
-
-    initAudio();
-  }, []);
-
   const startRecording = async () => {
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(audioStream);
+      const mediaRecorder = new MediaRecorder(audioStream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -80,31 +60,38 @@ export default function AssessmentPage() {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const audioBlob = new Blob(recordedChunks, { type: 'audio/webm;codecs=opus' });
         const audioUrl = URL.createObjectURL(audioBlob);
 
-        // Calculate basic audio metrics
-        const audioBuffer = await audioContext?.decodeAudioData(await audioBlob.arrayBuffer());
-        const duration = audioBuffer?.duration || 0;
-        const channelData = audioBuffer?.getChannelData(0) || new Float32Array();
+        // Simple volume calculation from audio data
+        const audioContext = new AudioContext();
+        const audioBuffer = await audioContext.decodeAudioData(await audioBlob.arrayBuffer());
+        const channelData = audioBuffer.getChannelData(0);
 
-        // Simple volume calculation
         let sum = 0;
         for (let i = 0; i < channelData.length; i++) {
           sum += Math.abs(channelData[i]);
         }
         const volume = sum / channelData.length;
 
-        // Update assessment with new recording and metrics
-        const currentRecordings = (assessment?.voiceAnalysisData as VoiceAnalysisData)?.recordings || [];
+        // Update assessment with new recording
+        const currentData = assessment?.voiceAnalysisData as VoiceAnalysisData || {
+          pitch: 0,
+          volume: 0,
+          clarity: 0,
+          recordings: []
+        };
+
         updateAssessment.mutate({
           voiceAnalysisData: {
-            pitch: 0, // Placeholder for now
+            ...currentData,
             volume: volume * 100,
-            clarity: 0, // Placeholder for now
-            recordings: [...currentRecordings, audioUrl],
-          },
+            recordings: [...currentData.recordings, audioUrl]
+          }
         });
+
+        // Clean up
+        audioContext.close();
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -127,7 +114,6 @@ export default function AssessmentPage() {
     }
   };
 
-  // Camera setup effect (keeping existing code)
   useEffect(() => {
     async function setupCamera() {
       try {
@@ -159,7 +145,6 @@ export default function AssessmentPage() {
     try {
       const detector = new window.FaceDetector();
       const faces = await detector.detect(videoRef.current);
-      setFacialData((prev) => [...prev, faces]);
 
       updateAssessment.mutate({
         facialAnalysisData: faces,
