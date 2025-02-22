@@ -33,120 +33,104 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Left side - Login/Register Form */}
-      <div className="flex items-center justify-center p-4">
-        <div className="w-full max-w-sm space-y-6">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-lg p-8">
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Register</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="login" className="mt-6">
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-semibold">Welcome Back</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Login to access your SEN assessment dashboard
-                  </p>
+          <TabsContent value="login">
+            <div>
+              <h1 className="text-2xl font-semibold mb-2">Welcome Back</h1>
+              <p className="text-muted-foreground mb-6">
+                Login to access your SEN assessment dashboard
+              </p>
+
+              <form
+                onSubmit={loginForm.handleSubmit((data) =>
+                  loginMutation.mutate(data)
+                )}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    {...loginForm.register("username")}
+                    required
+                  />
                 </div>
-
-                <form
-                  onSubmit={loginForm.handleSubmit((data) =>
-                    loginMutation.mutate(data)
-                  )}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      {...loginForm.register("username")}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      {...loginForm.register("password")}
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loginMutation.isPending}
-                  >
-                    {loginMutation.isPending ? "Logging in..." : "Login"}
-                  </Button>
-                </form>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="register" className="mt-6">
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-semibold">Create an Account</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Register to start using the SEN assessment tool
-                  </p>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    {...loginForm.register("password")}
+                    required
+                  />
                 </div>
-
-                <form
-                  onSubmit={registerForm.handleSubmit((data) =>
-                    registerMutation.mutate(data)
-                  )}
-                  className="space-y-4"
+                <Button
+                  type="submit"
+                  className="w-full mt-6"
+                  disabled={loginMutation.isPending}
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input
-                      id="fullName"
-                      {...registerForm.register("fullName")}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input
-                      id="username"
-                      {...registerForm.register("username")}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      {...registerForm.register("password")}
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={registerMutation.isPending}
-                  >
-                    {registerMutation.isPending ? "Creating account..." : "Register"}
-                  </Button>
-                </form>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+            </div>
+          </TabsContent>
 
-      {/* Right side - Only Centered Logo */}
-      <div className="hidden lg:flex items-center justify-center bg-muted/5">
-        <img
-          src="/SiliconSquaresLogoContact.png"
-          alt="Silicon Squares Logo"
-          className="w-48 h-48 object-contain"
-        />
+          <TabsContent value="register">
+            <div>
+              <h1 className="text-2xl font-semibold mb-2">Create an Account</h1>
+              <p className="text-muted-foreground mb-6">
+                Register to start using the SEN assessment tool
+              </p>
+
+              <form
+                onSubmit={registerForm.handleSubmit((data) =>
+                  registerMutation.mutate(data)
+                )}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    {...registerForm.register("fullName")}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    {...registerForm.register("username")}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    {...registerForm.register("password")}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full mt-6"
+                  disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending ? "Creating account..." : "Register"}
+                </Button>
+              </form>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
