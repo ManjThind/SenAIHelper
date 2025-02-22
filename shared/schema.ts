@@ -78,6 +78,24 @@ export interface FacialAnalysisData {
   timestamp: string;
 }
 
+// Add AI diagnostic interface
+export interface AIDiagnosticData {
+  metrics: {
+    communicationSkills: number;
+    socialInteraction: number;
+    behavioralPatterns: number;
+    emotionalRegulation: number;
+    cognitiveFunction: number;
+  };
+  diagnosis: {
+    primaryFindings: string[];
+    secondaryObservations: string[];
+    confidenceLevel: number;
+  };
+  recommendations: string[];
+  timestamp: string;
+}
+
 // Update assessments table
 export const assessments = pgTable("assessments", {
   id: serial("id").primaryKey(),
@@ -91,6 +109,7 @@ export const assessments = pgTable("assessments", {
   voiceAnalysisData: jsonb("voice_analysis_data"),
   writingAnalysisData: jsonb("writing_analysis_data").$type<WritingAnalysisData | null>(),
   attentionAnalysisData: jsonb("attention_analysis_data").$type<AttentionAnalysisData | null>(),
+  aiDiagnosticData: jsonb("ai_diagnostic_data").$type<AIDiagnosticData | null>(),
   status: text("status").notNull().default("in_progress"),
   notes: text("notes"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

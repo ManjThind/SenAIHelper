@@ -2,9 +2,18 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertAssessmentSchema, insertReportSchema, insertChildSchema, shopItems, ownedItems } from "@shared/schema";
+import { insertAssessmentSchema, insertReportSchema, insertChildSchema, shopItems, ownedItems, AIDiagnosticData } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { Messages } from '@anthropic-ai/sdk'
+import Anthropic from '@anthropic-ai/sdk';
+
+// the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
+const ANTHROPIC_MODEL = 'claude-3-5-sonnet-20241022';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -191,6 +200,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(newOwnedItem);
     } catch (error) {
       res.status(500).json({ error: "Failed to purchase item" });
+    }
+  });
+
+  // New AI Diagnostic route
+  app.post("/api/ai-diagnostic", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { assessmentData, childAge } = req.body;
+
+      const prompt = `
+As an expert in Special Educational Needs (SEN) diagnostics, analyze the following assessment data for a ${childAge}-year-old child. 
+Provide a comprehensive analysis focusing on key developmental areas.
+
+Assessment Data:
+${JSON.stringify(assessmentData, null, 2)}
+
+Please provide a structured analysis in JSON format with the following structure:
+{
+  "metrics": {
+    "communicationSkills": [0-1 score],
+    "socialInteraction": [0-1 score],
+    "behavioralPatterns": [0-1 score],
+    "emotionalRegulation": [0-1 score],
+    "cognitiveFunction": [0-1 score]
+  },
+  "diagnosis": {
+    "primaryFindings": ["list of main diagnostic findings"],
+    "secondaryObservations": ["list of additional observations"],
+    "confidenceLevel": [0-1 confidence score]
+  },
+  "recommendations": ["list of specific recommendations for support and intervention"]
+}`;
+
+      const response = await anthropic.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        system: "You are an expert SEN diagnostician with extensive experience in child development and educational psychology.",
+      });
+
+      const content = response.content[0].type === 'text' 
+        ? response.content[0].text 
+        : JSON.stringify({
+            metrics: {
+              communicationSkills: 0,
+              socialInteraction: 0,
+              behavioralPatterns: 0,
+              emotionalRegulation: 0,
+              cognitiveFunction: 0
+            },
+            diagnosis: {
+              primaryFindings: ['Could not generate findings'],
+              secondaryObservations: [],
+              confidenceLevel: 0
+            },
+            recommendations: ['Please try again']
+          });
+
+      const analysis: AIDiagnosticData = {
+        ...JSON.parse(content),
+        timestamp: new Date().toISOString(),
+      };
+
+      res.json(analysis);
+    } catch (error) {
+      console.error('AI Diagnostic Error:', error);
+      res.status(500).json({ error: 'Failed to generate AI diagnosis' });
     }
   });
 

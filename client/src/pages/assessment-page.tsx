@@ -155,6 +155,24 @@ export default function AssessmentPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Diagnostic Analysis</CardTitle>
+            <CardDescription>
+              Get comprehensive AI-powered insights
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => navigate(`/assessment/${id}/ai-diagnostic`)}
+              className="w-full"
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              View AI Analysis
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Behavioral Assessment</CardTitle>

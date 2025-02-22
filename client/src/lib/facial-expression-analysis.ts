@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
+import * as faceDetection from '@mediapipe/face_detection';
 import { FacialAnalysisData } from '@shared/schema';
 
 interface EmotionMetrics {
@@ -14,32 +14,41 @@ interface EmotionMetrics {
 export async function analyzeFacialExpression(
   video: HTMLVideoElement
 ): Promise<FacialAnalysisData> {
-  // Load the face landmarks model
-  const model = await faceLandmarksDetection.load(
-    faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
-  );
+  // Initialize face detection
+  const detector = await tf.loadGraphModel('/models/face_expression_model');
 
-  // Get facial landmarks
-  const predictions = await model.estimateFaces({
-    input: video,
-  });
+  // Get video frame as tensor
+  const videoTensor = tf.browser.fromPixels(video);
+  const resized = tf.image.resizeBilinear(videoTensor, [224, 224]);
+  const normalized = resized.div(255.0);
+  const batched = normalized.expandDims(0);
 
-  if (!predictions.length) {
-    throw new Error('No face detected');
-  }
+  // Run prediction
+  const predictions = await detector.predict(batched);
+  const emotionScores = await predictions.data();
 
-  // Extract key facial points
-  const face = predictions[0];
-  const landmarks = face.scaledMesh;
-
-  // Calculate emotion metrics based on facial landmark positions
-  const metrics = await calculateEmotionMetrics(landmarks);
+  // Calculate metrics
+  const metrics: EmotionMetrics = {
+    happiness: emotionScores[0],
+    sadness: emotionScores[1], 
+    anger: emotionScores[2],
+    surprise: emotionScores[3],
+    neutral: emotionScores[4],
+    fear: emotionScores[5]
+  };
 
   // Generate suggestions based on emotional state
   const suggestions = generateSuggestions(metrics);
 
   // Calculate overall emotional engagement score
   const overallScore = calculateOverallScore(metrics);
+
+  // Cleanup tensors
+  videoTensor.dispose();
+  resized.dispose();
+  normalized.dispose();
+  batched.dispose();
+  predictions.dispose();
 
   return {
     metrics,
@@ -49,26 +58,9 @@ export async function analyzeFacialExpression(
   };
 }
 
-async function calculateEmotionMetrics(landmarks: number[][]): Promise<EmotionMetrics> {
-  // Convert landmarks to tensor for analysis
-  const landmarksTensor = tf.tensor2d(landmarks);
-
-  // Calculate metrics based on facial geometry
-  // These are placeholder implementations that would need real geometric calculations
-  return {
-    happiness: 0.8,  // Example values
-    sadness: 0.2,
-    anger: 0.1,
-    surprise: 0.3,
-    neutral: 0.4,
-    fear: 0.1,
-  };
-}
-
 function generateSuggestions(metrics: EmotionMetrics): string[] {
   const suggestions: string[] = [];
 
-  // Add suggestions based on dominant emotions
   if (metrics.happiness > 0.7) {
     suggestions.push("Strong positive emotional engagement detected");
   }
@@ -89,7 +81,6 @@ function generateSuggestions(metrics: EmotionMetrics): string[] {
 }
 
 function calculateOverallScore(metrics: EmotionMetrics): number {
-  // Calculate weighted average of emotional engagement
   const weights = {
     happiness: 0.3,
     sadness: 0.15,

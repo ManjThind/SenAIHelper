@@ -20,6 +20,7 @@ import ReportsHomePage from "@/pages/reports-home-page";
 import ReportPage from "@/pages/report-page";
 import WritingAssessmentPage from "@/pages/writing-assessment-page";
 import AttentionAssessmentPage from "@/pages/attention-assessment-page";
+import AIDiagnosticPage from "@/pages/ai-diagnostic-page";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
       <ProtectedRoute path="/assessment/:id/writing" component={WritingAssessmentPage} />
       <ProtectedRoute path="/assessment/:id/attention" component={AttentionAssessmentPage} />
+      <ProtectedRoute path="/assessment/:id/ai-diagnostic" component={AIDiagnosticPage} />
       <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <ProtectedRoute path="/children" component={ChildrenListPage} />
       <ProtectedRoute path="/shop" component={AccessoryShopPage} />
