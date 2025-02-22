@@ -33,10 +33,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+    <div className="min-h-screen w-screen max-w-[1920px] mx-auto grid grid-cols-1 lg:grid-cols-2">
       {/* Left side - Login/Register Form */}
-      <div className="flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="flex items-center justify-center p-12">
+        <div className="w-full max-w-xl">
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -141,17 +141,17 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Logo and Text */}
-      <div className="hidden lg:flex flex-col items-center justify-center bg-muted/5">
+      <div className="hidden lg:flex flex-col items-center justify-center bg-muted/5 px-12">
         <img
           src="/SiliconSquaresLogoContact.png"
           alt="Silicon Squares Logo"
-          className="w-48 h-48 object-contain mb-8"
+          className="w-64 h-64 object-contain mb-12"
         />
-        <h1 className="text-4xl font-bold mb-4 text-center">
+        <h1 className="text-5xl font-bold mb-6 text-center leading-tight">
           AI-Powered<br />
           SEN Assessment Tool
         </h1>
-        <p className="text-lg text-muted-foreground max-w-md text-center">
+        <p className="text-xl text-muted-foreground max-w-2xl text-center">
           Helping identify early signs of autism and ADHD through advanced facial
           analysis and behavioral assessment.
         </p>
