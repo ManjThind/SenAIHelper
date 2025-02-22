@@ -43,24 +43,6 @@ export default function AuthPage() {
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <img 
-                src="SiliconSquaresLogoContact.png" 
-                alt="Silicon Squares Logo" 
-                className="w-32 h-32 object-contain"
-              />
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-primary">
-                  AI ASSESSMENT
-                </h1>
-                <p className="text-muted-foreground">
-                  Intelligent SEN Diagnostic Tool
-                </p>
-              </div>
-            </div>
-          </div>
-
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
