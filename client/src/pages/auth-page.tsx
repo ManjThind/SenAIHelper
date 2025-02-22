@@ -147,8 +147,9 @@ export default function AuthPage() {
           alt="Silicon Squares Logo"
           className="w-48 h-48 object-contain mb-8"
         />
-        <h1 className="text-4xl font-bold mb-4">
-          AI-Powered SEN Assessment Tool
+        <h1 className="text-4xl font-bold mb-4 text-center">
+          AI-Powered<br />
+          SEN Assessment Tool
         </h1>
         <p className="text-lg text-muted-foreground max-w-md text-center">
           Helping identify early signs of autism and ADHD through advanced facial
