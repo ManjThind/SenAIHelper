@@ -40,10 +40,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left side with login/register form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="flex items-center justify-center p-8">
+        <div className="w-full max-w-md space-y-6">
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -65,7 +65,7 @@ export default function AuthPage() {
                     )}
                     className="space-y-4"
                   >
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="username">Username</Label>
                       <Input
                         id="username"
@@ -73,7 +73,7 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <Input
                         id="password"
@@ -109,7 +109,7 @@ export default function AuthPage() {
                     )}
                     className="space-y-4"
                   >
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="fullName">Full Name</Label>
                       <Input
                         id="fullName"
@@ -117,7 +117,7 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="username">Username</Label>
                       <Input
                         id="username"
@@ -125,7 +125,7 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <Input
                         id="password"
@@ -139,7 +139,9 @@ export default function AuthPage() {
                       className="w-full"
                       disabled={registerMutation.isPending}
                     >
-                      {registerMutation.isPending ? "Creating account..." : "Register"}
+                      {registerMutation.isPending
+                        ? "Creating account..."
+                        : "Register"}
                     </Button>
                   </form>
                 </CardContent>
@@ -150,17 +152,18 @@ export default function AuthPage() {
       </div>
 
       {/* Right side with branding */}
-      <div className="hidden lg:flex flex-1 bg-primary/5 p-8">
-        <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
-          <img 
-            src="/SiliconSquaresLogoContact.png" 
-            alt="Silicon Squares Logo" 
+      <div className="hidden lg:flex relative bg-primary/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
+        <div className="relative w-full flex flex-col items-center justify-center p-8">
+          <img
+            src="/SiliconSquaresLogoContact.png"
+            alt="Silicon Squares Logo"
             className="w-48 h-48 mb-8 object-contain"
           />
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             AI-Powered SEN Assessment Tool
           </h1>
-          <p className="text-lg text-muted-foreground max-w-md">
+          <p className="text-lg text-muted-foreground max-w-md text-center">
             Helping identify early signs of autism and ADHD through advanced facial
             analysis and behavioral assessment.
           </p>
