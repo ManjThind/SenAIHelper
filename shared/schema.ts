@@ -18,6 +18,7 @@ export const assessments = pgTable("assessments", {
   dateCreated: timestamp("date_created").notNull().defaultNow(),
   facialAnalysisData: jsonb("facial_analysis_data"),
   questionnaireData: jsonb("questionnaire_data"),
+  voiceAnalysisData: jsonb("voice_analysis_data"),
   status: text("status").notNull().default("in_progress"),
 });
 
@@ -28,6 +29,19 @@ export const reports = pgTable("reports", {
   findings: jsonb("findings").notNull(),
   recommendations: jsonb("recommendations").notNull(),
 });
+
+// Define types for our questionnaire and voice analysis data
+export interface QuestionnaireData {
+  eyeContact?: string;
+  nameResponse?: string;
+}
+
+export interface VoiceAnalysisData {
+  pitch: number;
+  volume: number;
+  clarity: number;
+  recordings: string[];
+}
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
