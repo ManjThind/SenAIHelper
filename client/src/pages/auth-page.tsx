@@ -151,7 +151,7 @@ export default function AuthPage() {
       <div className="hidden lg:flex flex-1 bg-primary/5 items-center justify-center p-8">
         <div className="max-w-md text-center">
           <img 
-            src="SiliconSquaresLogoContact.png" 
+            src="/SiliconSquaresLogoContact.png" 
             alt="Silicon Squares Logo" 
             className="w-32 h-32 mx-auto mb-8 object-contain"
           />
