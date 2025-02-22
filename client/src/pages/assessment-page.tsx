@@ -17,6 +17,8 @@ import { Assessment, QuestionnaireData, VoiceAnalysisData } from "@shared/schema
 import { Camera, Mic, Check, Square, Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
+import { initializeVoiceAnalysis, analyzeAudioStream, VoiceMetrics } from "@/lib/voice-analysis";
+import { Progress } from "@/components/ui/progress";
 
 export default function AssessmentPage() {
   const { id } = useParams();
@@ -29,6 +31,8 @@ export default function AssessmentPage() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [voiceMetrics, setVoiceMetrics] = useState<VoiceMetrics | null>(null);
+  const [voiceAnalysisReady, setVoiceAnalysisReady] = useState(false);
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -69,53 +73,59 @@ export default function AssessmentPage() {
     loadModels();
   }, []);
 
-  // Voice recording functionality
+  useEffect(() => {
+    async function setupVoiceAnalysis() {
+      try {
+        await initializeVoiceAnalysis();
+        setVoiceAnalysisReady(true);
+        toast({
+          title: "Voice Analysis Ready",
+          description: "Voice analysis system initialized successfully",
+        });
+      } catch (err) {
+        toast({
+          title: "Voice Analysis Error",
+          description: "Could not initialize voice analysis",
+          variant: "destructive",
+        });
+      }
+    }
+    setupVoiceAnalysis();
+  }, []);
+
   const startRecording = async () => {
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(audioStream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      const mediaRecorder = new MediaRecorder(audioStream);
+      const { audioContext, analyser } = await initializeVoiceAnalysis();
+
+      const source = audioContext.createMediaStreamSource(audioStream);
+      source.connect(analyser);
+
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      analyser.connect(processor);
+      processor.connect(audioContext.destination);
+
+      processor.onaudioprocess = async (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        const metrics = await analyzeAudioStream(inputData);
+        setVoiceMetrics(metrics);
+
+        // Fix the spread of undefined issue
+        const currentVoiceData = assessment?.voiceAnalysisData || {};
+        updateAssessment.mutate({
+          voiceAnalysisData: {
+            ...currentVoiceData,
+            metrics,
+            recordings: currentVoiceData.recordings || []
+          }
+        });
+      };
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setRecordedChunks((chunks) => [...chunks, event.data]);
         }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(recordedChunks, { type: 'audio/webm;codecs=opus' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        // Simple volume calculation from audio data
-        const audioContext = new AudioContext();
-        const audioBuffer = await audioContext.decodeAudioData(await audioBlob.arrayBuffer());
-        const channelData = audioBuffer.getChannelData(0);
-
-        let sum = 0;
-        for (let i = 0; i < channelData.length; i++) {
-          sum += Math.abs(channelData[i]);
-        }
-        const volume = sum / channelData.length;
-
-        // Update assessment with new recording
-        const currentData = assessment?.voiceAnalysisData as VoiceAnalysisData || {
-          pitch: 0,
-          volume: 0,
-          clarity: 0,
-          recordings: []
-        };
-
-        updateAssessment.mutate({
-          voiceAnalysisData: {
-            ...currentData,
-            volume: volume * 100,
-            recordings: [...currentData.recordings, audioUrl]
-          }
-        });
-
-        // Clean up
-        audioContext.close();
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -135,10 +145,21 @@ export default function AssessmentPage() {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setRecordedChunks([]);
+
+      // Save the recording
+      const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      const currentVoiceData = assessment?.voiceAnalysisData || {};
+      updateAssessment.mutate({
+        voiceAnalysisData: {
+          ...currentVoiceData,
+          recordings: [...(currentVoiceData.recordings || []), audioUrl]
+        }
+      });
     }
   };
 
-  // Camera and face detection
   useEffect(() => {
     async function setupCamera() {
       try {
@@ -268,6 +289,7 @@ export default function AssessmentPage() {
                 onClick={isRecording ? stopRecording : startRecording}
                 variant={isRecording ? "destructive" : "default"}
                 className="w-full"
+                disabled={!voiceAnalysisReady}
               >
                 {isRecording ? (
                   <>
@@ -281,6 +303,45 @@ export default function AssessmentPage() {
                   </>
                 )}
               </Button>
+
+              {voiceMetrics && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Volume</span>
+                      <span>{Math.round(voiceMetrics.volume)}%</span>
+                    </div>
+                    <Progress value={voiceMetrics.volume} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Clarity</span>
+                      <span>{Math.round(voiceMetrics.clarity)}%</span>
+                    </div>
+                    <Progress value={voiceMetrics.clarity} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Speaking Rate</span>
+                      <p className="font-medium">{voiceMetrics.speakingRate} words/min</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Word Count</span>
+                      <p className="font-medium">{voiceMetrics.wordCount} words</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Pauses</span>
+                      <p className="font-medium">{voiceMetrics.pauseCount} detected</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">Pitch</span>
+                      <p className="font-medium">{Math.round(voiceMetrics.pitch)}Hz</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {(assessment?.voiceAnalysisData as VoiceAnalysisData)?.recordings?.length > 0 && (
                 <div className="space-y-2">
