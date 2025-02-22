@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import { insertAssessmentSchema } from '@shared/schema';
+import { WritingAnalysisData } from '@shared/schema';
 
 interface WritingMetrics {
   legibility: number;
@@ -9,16 +9,10 @@ interface WritingMetrics {
   pressure: number;
 }
 
-interface WritingAnalysis {
-  metrics: WritingMetrics;
-  suggestions: string[];
-  overallScore: number;
-}
-
-export async function analyzeHandwriting(strokes: number[][]): Promise<WritingAnalysis> {
+export async function analyzeHandwriting(strokes: number[][]): Promise<WritingAnalysisData> {
   // Convert strokes to tensor
   const strokesTensor = tf.tensor(strokes);
-  
+
   // Analyze various aspects of handwriting
   const metrics: WritingMetrics = {
     legibility: await analyzeLegibility(strokesTensor),
@@ -38,6 +32,7 @@ export async function analyzeHandwriting(strokes: number[][]): Promise<WritingAn
     metrics,
     suggestions,
     overallScore,
+    timestamp: new Date().toISOString(),
   };
 }
 

@@ -38,14 +38,28 @@ export const children = pgTable("children", {
 
 // Add writing analysis interface
 export interface WritingAnalysisData {
-  text: string;
-  analysis: {
-    complexity: string;
-    organization: string;
-    handwriting: string;
-    grammarAndSpelling: string;
-    recommendations: string[];
+  metrics: {
+    legibility: number;
+    consistency: number;
+    spacing: number;
+    alignment: number;
+    pressure: number;
   };
+  suggestions: string[];
+  overallScore: number;
+  timestamp: string;
+}
+
+// Add attention analysis interface
+export interface AttentionAnalysisData {
+  metrics: {
+    focusDuration: number;
+    trackingAccuracy: number;
+    distractibility: number;
+    responseTime: number;
+  };
+  suggestions: string[];
+  overallScore: number;
   timestamp: string;
 }
 
@@ -60,7 +74,8 @@ export const assessments = pgTable("assessments", {
   facialAnalysisData: jsonb("facial_analysis_data"),
   questionnaireData: jsonb("questionnaire_data"),
   voiceAnalysisData: jsonb("voice_analysis_data"),
-  writingAnalysisData: jsonb("writing_analysis_data").$type<WritingAnalysisData>(),
+  writingAnalysisData: jsonb("writing_analysis_data").$type<WritingAnalysisData | null>(),
+  attentionAnalysisData: jsonb("attention_analysis_data").$type<AttentionAnalysisData | null>(),
   status: text("status").notNull().default("in_progress"),
   notes: text("notes"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

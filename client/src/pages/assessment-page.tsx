@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
-import { ArrowLeft, Camera, Mic, Brain, FileText, Check } from "lucide-react";
+import { ArrowLeft, Camera, Mic, Brain, FileText, Eye, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
@@ -133,6 +133,24 @@ export default function AssessmentPage() {
             >
               <FileText className="h-4 w-4 mr-2" />
               Start Writing Analysis
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Attention Analysis</CardTitle>
+            <CardDescription>
+              Measure focus and visual tracking abilities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => navigate(`/assessment/${id}/attention`)}
+              className="w-full"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Start Attention Analysis
             </Button>
           </CardContent>
         </Card>

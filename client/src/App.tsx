@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
 import { OnboardingTutorial } from "@/components/onboarding-tutorial";
+import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -17,8 +18,8 @@ import ChildrenListPage from "@/pages/children-list-page";
 import AccessoryShopPage from "@/pages/accessory-shop-page";
 import ReportsHomePage from "@/pages/reports-home-page";
 import ReportPage from "@/pages/report-page";
-import { ProtectedRoute } from "./lib/protected-route";
 import WritingAssessmentPage from "@/pages/writing-assessment-page";
+import AttentionAssessmentPage from "@/pages/attention-assessment-page";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/assessment/:id/voice" component={VoiceAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
       <ProtectedRoute path="/assessment/:id/writing" component={WritingAssessmentPage} />
+      <ProtectedRoute path="/assessment/:id/attention" component={AttentionAssessmentPage} />
       <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <ProtectedRoute path="/children" component={ChildrenListPage} />
       <ProtectedRoute path="/shop" component={AccessoryShopPage} />
