@@ -152,7 +152,7 @@ export default function AuthPage() {
       {/* Right side - Logo and Text */}
       <div className="hidden lg:flex flex-col items-center justify-center bg-muted/5 px-12">
         <img
-          src="/attached_assets/Copy of sILICON Square.png"
+          src="/attached_assets/Copy of Copy of sILICON Square_1740261799440.png"
           alt="Silicon Squares Logo"
           className="w-64 h-64 object-contain mb-12"
         />
