@@ -18,6 +18,7 @@ import AccessoryShopPage from "@/pages/accessory-shop-page";
 import ReportsHomePage from "@/pages/reports-home-page";
 import ReportPage from "@/pages/report-page";
 import { ProtectedRoute } from "./lib/protected-route";
+import WritingAssessmentPage from "@/pages/writing-assessment-page";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <ProtectedRoute path="/assessment/:id/facial" component={FacialAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/voice" component={VoiceAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
+      <ProtectedRoute path="/assessment/:id/writing" component={WritingAssessmentPage} />
       <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <ProtectedRoute path="/children" component={ChildrenListPage} />
       <ProtectedRoute path="/shop" component={AccessoryShopPage} />

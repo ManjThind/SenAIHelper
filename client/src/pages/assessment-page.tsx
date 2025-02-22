@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
-import { ArrowLeft, Camera, Mic, Brain, Check } from "lucide-react";
+import { ArrowLeft, Camera, Mic, Brain, FileText, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
@@ -115,6 +115,24 @@ export default function AssessmentPage() {
             >
               <Brain className="mr-2 h-4 w-4" />
               Start Interactive Analysis
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Writing Analysis</CardTitle>
+            <CardDescription>
+              Evaluate handwriting and text organization
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => navigate(`/assessment/${id}/writing`)}
+              className="w-full"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Start Writing Analysis
             </Button>
           </CardContent>
         </Card>

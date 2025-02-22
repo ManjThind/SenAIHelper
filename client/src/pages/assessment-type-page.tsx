@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Brain, ArrowLeft, Activity } from "lucide-react";
+import { Mic, Camera, Brain, ArrowLeft, Activity, FileText, Eye, Hand, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,6 +43,34 @@ const assessmentTypes = [
     description: "Assess social interaction and communication skills",
     icon: Brain,
     color: "text-purple-500",
+  },
+  {
+    id: "writing",
+    title: "Writing Assessment",
+    description: "Evaluate handwriting, text organization, and comprehension",
+    icon: FileText,
+    color: "text-amber-500",
+  },
+  {
+    id: "attention",
+    title: "Attention Analysis",
+    description: "Measure focus duration and visual tracking patterns",
+    icon: Eye,
+    color: "text-indigo-500",
+  },
+  {
+    id: "motor",
+    title: "Motor Skills",
+    description: "Assess fine and gross motor skill development",
+    icon: Hand,
+    color: "text-rose-500",
+  },
+  {
+    id: "sensory",
+    title: "Sensory Processing",
+    description: "Evaluate responses to various sensory stimuli",
+    icon: Zap,
+    color: "text-cyan-500",
   },
   {
     id: "behavioral",
@@ -155,8 +183,8 @@ export default function AssessmentTypePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {assessmentTypes.map((type) => (
-          <Card 
-            key={type.id} 
+          <Card
+            key={type.id}
             className={`hover:bg-accent/5 transition-colors cursor-pointer ${!selectedChild ? 'opacity-50 pointer-events-none' : ''}`}
             onClick={() => handleTypeSelect(type.id)}
           >
