@@ -190,8 +190,23 @@ export interface VoiceAnalysisData {
 
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users);
+// Update the insertChildSchema to properly handle date conversion
 export const insertChildSchema = createInsertSchema(children, {
-  dateOfBirth: z.coerce.date(),
+  dateOfBirth: z.string().transform((str) => new Date(str)),
+  parentId: z.number(),
+  medicalHistory: z.record(z.any()).optional().default({}),
+  schoolInformation: z.record(z.any()).optional().default({}),
+  avatar: z.object({
+    type: z.string(),
+    color: z.string(),
+    accessories: z.array(z.string()),
+    name: z.string(),
+  }).optional().default({
+    type: "robot",
+    color: "blue",
+    accessories: [],
+    name: "",
+  }),
 });
 export const insertAssessmentSchema = createInsertSchema(assessments);
 export const insertReportSchema = createInsertSchema(reports, {

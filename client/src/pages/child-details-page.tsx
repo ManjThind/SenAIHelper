@@ -82,7 +82,12 @@ export default function ChildDetailsPage() {
       parentId: user?.id || 0,
       medicalHistory: {},
       schoolInformation: {},
-      avatar: defaultAvatar,
+      avatar: {
+        type: "robot",
+        color: "blue",
+        accessories: [],
+        name: "",
+      },
     },
   });
 
@@ -155,18 +160,20 @@ export default function ChildDetailsPage() {
 
   const onSubmit = async (data: InsertChild) => {
     try {
-      // Ensure date is properly formatted
+      if (!user?.id) {
+        throw new Error("You must be logged in to create a child profile");
+      }
+
       const formattedData = {
         ...data,
-        parentId: user?.id || 0,
-        dateOfBirth: new Date(data.dateOfBirth),
+        parentId: user.id,
+        dateOfBirth: new Date(data.dateOfBirth).toISOString(),
         avatar: {
-          type: data.avatar?.type || defaultAvatar.type,
-          color: data.avatar?.color || defaultAvatar.color,
+          type: data.avatar?.type || "robot",
+          color: data.avatar?.color || "blue",
           accessories: selectedAccessories,
-          name: data.avatar?.name || defaultAvatar.name,
+          name: data.avatar?.name || "",
         },
-        // Initialize empty objects for optional fields
         medicalHistory: {},
         schoolInformation: {},
       };

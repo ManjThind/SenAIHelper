@@ -48,38 +48,49 @@ export class DatabaseStorage implements IStorage {
 
   async createChild(child: InsertChild): Promise<Child> {
     try {
-      // Ensure required fields are present
-      if (!child.firstName || !child.lastName || !child.gender || !child.parentId) {
-        throw new Error("Missing required fields");
-      }
-
-      // Ensure date is valid
+      // Parse and validate the date
       const dateOfBirth = new Date(child.dateOfBirth);
       if (isNaN(dateOfBirth.getTime())) {
-        throw new Error("Invalid date of birth");
+        throw new Error("Invalid date of birth format");
       }
 
+      // Validate required fields
+      if (!child.firstName?.trim()) throw new Error("First name is required");
+      if (!child.lastName?.trim()) throw new Error("Last name is required");
+      if (!child.gender?.trim()) throw new Error("Gender is required");
+      if (!child.parentId) throw new Error("Parent ID is required");
+
+      // Create the child record with properly formatted data
       const [newChild] = await db
         .insert(children)
         .values({
-          ...child,
-          dateOfBirth, // Use the parsed date
+          firstName: child.firstName.trim(),
+          lastName: child.lastName.trim(),
+          gender: child.gender.trim(),
+          parentId: child.parentId,
+          dateOfBirth,
           medicalHistory: child.medicalHistory || {},
           schoolInformation: child.schoolInformation || {},
-          avatar: child.avatar || {},
+          avatar: child.avatar || {
+            type: "robot",
+            color: "blue",
+            accessories: [],
+            name: "",
+          },
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
 
       if (!newChild) {
-        throw new Error("Failed to create child profile");
+        throw new Error("Failed to create child record");
       }
 
       return newChild;
     } catch (error) {
+      console.error("Child creation error:", error);
       if (error instanceof Error) {
-        throw new Error(`Failed to create child profile: ${error.message}`);
+        throw new Error(`Child creation failed: ${error.message}`);
       }
       throw new Error("Failed to create child profile");
     }
