@@ -23,6 +23,11 @@ declare global {
   }
 }
 
+interface QuestionnaireData {
+  eyeContact?: string;
+  nameResponse?: string;
+}
+
 export default function AssessmentPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -137,25 +142,27 @@ export default function AssessmentPage() {
               <Label>Does the child maintain eye contact?</Label>
               <Textarea 
                 placeholder="Describe the child's eye contact behavior..."
+                value={(assessment?.questionnaireData as QuestionnaireData)?.eyeContact || ''}
                 onChange={(e) => 
                   updateAssessment.mutate({
                     questionnaireData: {
-                      ...assessment?.questionnaireData,
+                      ...(assessment?.questionnaireData as QuestionnaireData || {}),
                       eyeContact: e.target.value,
                     },
                   })
                 }
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>How does the child respond to their name?</Label>
               <Textarea 
                 placeholder="Describe the child's response..."
+                value={(assessment?.questionnaireData as QuestionnaireData)?.nameResponse || ''}
                 onChange={(e) =>
                   updateAssessment.mutate({
                     questionnaireData: {
-                      ...assessment?.questionnaireData,
+                      ...(assessment?.questionnaireData as QuestionnaireData || {}),
                       nameResponse: e.target.value,
                     },
                   })

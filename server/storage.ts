@@ -1,9 +1,20 @@
-import { IStorage } from "./storage";
 import { User, Assessment, Report, InsertUser } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
+
+export interface IStorage {
+  sessionStore: session.Store;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment>;
+  getAssessmentsByUserId(userId: number): Promise<Assessment[]>;
+  updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment>;
+  createReport(report: Omit<Report, "id">): Promise<Report>;
+  getReportByAssessmentId(assessmentId: number): Promise<Report | undefined>;
+}
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
@@ -34,14 +45,21 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user = { ...insertUser, id };
+    const user: User = { id, ...insertUser };
     this.users.set(id, user);
     return user;
   }
 
   async createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment> {
     const id = this.currentId++;
-    const newAssessment = { ...assessment, id };
+    const newAssessment = {
+      id,
+      ...assessment,
+      dateCreated: new Date(),
+      facialAnalysisData: null,
+      questionnaireData: null,
+      status: "in_progress"
+    } as Assessment;
     this.assessments.set(id, newAssessment);
     return newAssessment;
   }
@@ -65,7 +83,11 @@ export class MemStorage implements IStorage {
 
   async createReport(report: Omit<Report, "id">): Promise<Report> {
     const id = this.currentId++;
-    const newReport = { ...report, id };
+    const newReport = {
+      id,
+      ...report,
+      dateGenerated: new Date()
+    } as Report;
     this.reports.set(id, newReport);
     return newReport;
   }
