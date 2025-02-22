@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Child } from "@shared/schema";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/table";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
 import { format } from "date-fns";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function ChildrenListPage() {
+  const [, navigate] = useLocation();
   const { data: children, isLoading } = useQuery<Child[]>({
     queryKey: ["/api/children"],
   });
@@ -26,19 +27,29 @@ export default function ChildrenListPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex items-center mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mr-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
         <div>
           <h1 className="text-3xl font-bold">Children Profiles</h1>
           <p className="text-muted-foreground">
             View and manage all registered children
           </p>
         </div>
-        <Link href="/child/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Child
-          </Button>
-        </Link>
+        <div className="ml-auto">
+          <Link href="/child/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Child
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card>
