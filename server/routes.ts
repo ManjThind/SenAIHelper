@@ -14,6 +14,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const assessment = await storage.createAssessment({
       ...data,
       userId: req.user.id,
+      dateCreated: new Date(),
+      facialAnalysisData: null,
+      questionnaireData: null,
+      status: "in_progress"
     });
     res.status(201).json(assessment);
   });
@@ -24,20 +28,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(assessments);
   });
 
+  app.get("/api/assessments/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const assessments = await storage.getAssessmentsByUserId(req.user.id);
+    const assessment = assessments.find(a => a.id === parseInt(req.params.id));
+    if (!assessment) return res.sendStatus(404);
+    res.json(assessment);
+  });
+
   app.patch("/api/assessments/:id", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const assessment = await storage.updateAssessment(
+    const assessments = await storage.getAssessmentsByUserId(req.user.id);
+    const assessment = assessments.find(a => a.id === parseInt(req.params.id));
+    if (!assessment) return res.sendStatus(404);
+
+    const updated = await storage.updateAssessment(
       parseInt(req.params.id),
       req.body
     );
-    res.json(assessment);
+    res.json(updated);
   });
 
   // Report routes
   app.post("/api/reports", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const data = insertReportSchema.parse(req.body);
-    const report = await storage.createReport(data);
+    const report = await storage.createReport({
+      ...data,
+      dateGenerated: new Date()
+    });
     res.status(201).json(report);
   });
 

@@ -29,6 +29,29 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+interface FacialAnalysis {
+  eyeContact: string;
+  emotionalExpression: string;
+  attentionFocus: string;
+}
+
+interface BehavioralAnalysis {
+  socialInteraction: string;
+  communication: string;
+  attention: string;
+}
+
+interface Recommendations {
+  therapy: string[];
+  support: string[];
+  followUp: string;
+}
+
+interface ReportFindings {
+  facialAnalysis: FacialAnalysis;
+  behavioral: BehavioralAnalysis;
+}
+
 export default function ReportPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -47,7 +70,7 @@ export default function ReportPage() {
   const generateReport = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/reports", {
-        assessmentId: id,
+        assessmentId: Number(id),
         findings: {
           facialAnalysis: analyzeFacialData(assessment?.facialAnalysisData),
           behavioral: analyzeBehavioralData(assessment?.questionnaireData),
@@ -65,8 +88,7 @@ export default function ReportPage() {
     },
   });
 
-  function analyzeFacialData(data: any) {
-    // Simplified analysis for demo
+  function analyzeFacialData(data: any): FacialAnalysis {
     return {
       eyeContact: "Moderate",
       emotionalExpression: "Limited range",
@@ -74,7 +96,7 @@ export default function ReportPage() {
     };
   }
 
-  function analyzeBehavioralData(data: any) {
+  function analyzeBehavioralData(data: any): BehavioralAnalysis {
     return {
       socialInteraction: "Shows some difficulties in social engagement",
       communication: "Delayed response to verbal cues",
@@ -82,7 +104,7 @@ export default function ReportPage() {
     };
   }
 
-  function generateRecommendations(data: any) {
+  function generateRecommendations(data: any): Recommendations {
     return {
       therapy: [
         "Speech and Language Therapy",
@@ -110,6 +132,9 @@ export default function ReportPage() {
       </div>
     );
   }
+
+  const findings = report?.findings as ReportFindings;
+  const recommendations = report?.recommendations as Recommendations;
 
   return (
     <div className="container mx-auto py-8 space-y-6">
@@ -165,7 +190,7 @@ export default function ReportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(report.findings.facialAnalysis).map(
+                  {Object.entries(findings.facialAnalysis).map(
                     ([key, value]) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium">
@@ -196,7 +221,7 @@ export default function ReportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(report.findings.behavioral).map(
+                  {Object.entries(findings.behavioral).map(
                     ([key, value]) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium">
@@ -224,8 +249,8 @@ export default function ReportPage() {
                   Therapeutic Interventions
                 </h3>
                 <ul className="list-disc list-inside space-y-1">
-                  {report.recommendations.therapy.map((item, i) => (
-                    <li key={i}>{item}</li>
+                  {recommendations.therapy.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -235,8 +260,8 @@ export default function ReportPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Support Strategies</h3>
                 <ul className="list-disc list-inside space-y-1">
-                  {report.recommendations.support.map((item, i) => (
-                    <li key={i}>{item}</li>
+                  {recommendations.support.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </div>
@@ -245,7 +270,7 @@ export default function ReportPage() {
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Follow-up Plan</h3>
-                <p>{report.recommendations.followUp}</p>
+                <p>{recommendations.followUp}</p>
               </div>
             </CardContent>
           </Card>
