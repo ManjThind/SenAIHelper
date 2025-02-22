@@ -17,6 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       dateCreated: new Date(),
       facialAnalysisData: null,
       questionnaireData: null,
+      voiceAnalysisData: null,
       status: "in_progress"
     });
     res.status(201).json(assessment);
