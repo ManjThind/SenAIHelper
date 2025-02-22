@@ -1,4 +1,4 @@
-import { User, Assessment, Report, InsertUser, children, users, assessments, reports } from "@shared/schema";
+import { User, Assessment, Report, InsertUser, Child, InsertChild, children, users, assessments, reports } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -12,6 +12,8 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createChild(child: InsertChild): Promise<Child>;
+  getChildrenByParentId(parentId: number): Promise<Child[]>;
   createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment>;
   getAssessmentsByUserId(userId: number): Promise<Assessment[]>;
   updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment>;
@@ -42,6 +44,15 @@ export class DatabaseStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
+  }
+
+  async createChild(child: InsertChild): Promise<Child> {
+    const [newChild] = await db.insert(children).values(child).returning();
+    return newChild;
+  }
+
+  async getChildrenByParentId(parentId: number): Promise<Child[]> {
+    return db.select().from(children).where(eq(children.parentId, parentId));
   }
 
   async createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment> {

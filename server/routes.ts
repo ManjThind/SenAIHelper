@@ -2,10 +2,37 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertAssessmentSchema, insertReportSchema } from "@shared/schema";
+import { insertAssessmentSchema, insertReportSchema, insertChildSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Child routes
+  app.post("/api/children", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const data = insertChildSchema.parse(req.body);
+      const child = await storage.createChild({
+        ...data,
+        parentId: req.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      res.status(201).json(child);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid child data" });
+    }
+  });
+
+  app.get("/api/children", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const children = await storage.getChildrenByParentId(req.user.id);
+      res.json(children);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch children" });
+    }
+  });
 
   // Assessment routes
   app.post("/api/assessments", async (req, res) => {
