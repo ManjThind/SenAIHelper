@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
-import { ArrowLeft, Camera, Mic, Brain, FileText, Eye, Check } from "lucide-react";
+import { ArrowLeft, Camera, Mic, Brain, FileText, Eye, Check, ClipboardList } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 
@@ -46,185 +46,230 @@ export default function AssessmentPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex items-center mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/assessment/select-type")}
-          className="mr-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Assessment Types
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Conduct Assessment</h1>
-          <p className="text-muted-foreground">
-            Record and analyze assessment data
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/assessment/select-type")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+                Assessment Dashboard
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Complete assessment modules for {assessment?.childName}
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => {
+              updateAssessment.mutate({
+                status: "completed",
+              });
+              navigate("/");
+            }}
+            size="lg"
+            className="gap-2"
+          >
+            <Check className="h-4 w-4" />
+            Complete Assessment
+          </Button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Facial Analysis</CardTitle>
-            <CardDescription>
-              Capture and analyze facial expressions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/facial`)}
-              className="w-full"
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              Start Facial Analysis
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+                  <Camera className="h-5 w-5" />
+                </div>
+                <CardTitle>Facial Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                Capture and analyze facial expressions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/facial`)}
+                className="w-full"
+                variant="outline"
+              >
+                Start Facial Analysis
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Voice Analysis</CardTitle>
-            <CardDescription>
-              Record and analyze speech patterns
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/voice`)}
-              className="w-full"
-            >
-              <Mic className="mr-2 h-4 w-4" />
-              Start Voice Analysis
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-green-100 text-green-600">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <CardTitle>Voice Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                Record and analyze speech patterns
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/voice`)}
+                className="w-full"
+                variant="outline"
+              >
+                Start Voice Analysis
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Interactive Analysis</CardTitle>
-            <CardDescription>
-              AI-guided interactive evaluation
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/interactive`)}
-              className="w-full"
-            >
-              <Brain className="mr-2 h-4 w-4" />
-              Start Interactive Analysis
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+                  <Brain className="h-5 w-5" />
+                </div>
+                <CardTitle>Interactive Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                AI-guided interactive evaluation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/interactive`)}
+                className="w-full"
+                variant="outline"
+              >
+                Start Interactive Analysis
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Writing Analysis</CardTitle>
-            <CardDescription>
-              Evaluate handwriting and text organization
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/writing`)}
-              className="w-full"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Start Writing Analysis
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-amber-100 text-amber-600">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <CardTitle>Writing Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                Evaluate handwriting and text organization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/writing`)}
+                className="w-full"
+                variant="outline"
+              >
+                Start Writing Analysis
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Attention Analysis</CardTitle>
-            <CardDescription>
-              Measure focus and visual tracking abilities
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/attention`)}
-              className="w-full"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Start Attention Analysis
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-indigo-100 text-indigo-600">
+                  <Eye className="h-5 w-5" />
+                </div>
+                <CardTitle>Attention Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                Measure focus and visual tracking abilities
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/attention`)}
+                className="w-full"
+                variant="outline"
+              >
+                Start Attention Analysis
+              </Button>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>AI Diagnostic Analysis</CardTitle>
-            <CardDescription>
-              Get comprehensive AI-powered insights
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => navigate(`/assessment/${id}/ai-diagnostic`)}
-              className="w-full"
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              View AI Analysis
-            </Button>
-          </CardContent>
-        </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-rose-100 text-rose-600">
+                  <Brain className="h-5 w-5" />
+                </div>
+                <CardTitle>AI Diagnostic Analysis</CardTitle>
+              </div>
+              <CardDescription>
+                Get comprehensive AI-powered insights
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/assessment/${id}/ai-diagnostic`)}
+                className="w-full"
+                variant="outline"
+              >
+                View AI Analysis
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card className="md:col-span-2">
+        <Card className="mt-8 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Behavioral Assessment</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-slate-100 text-slate-600">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+              <CardTitle>Behavioral Assessment</CardTitle>
+            </div>
             <CardDescription>
               Complete the questionnaire below
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Does the child maintain eye contact?</Label>
-              <Textarea
-                placeholder="Describe the child's eye contact behavior..."
-                value={assessment?.questionnaireData?.eyeContact || ""}
-                onChange={(e) =>
-                  updateAssessment.mutate({
-                    questionnaireData: {
-                      ...(assessment?.questionnaireData || {}),
-                      eyeContact: e.target.value,
-                    } as QuestionnaireData,
-                  })
-                }
-              />
-            </div>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-base">Does the child maintain eye contact?</Label>
+                <Textarea
+                  placeholder="Describe the child's eye contact behavior..."
+                  value={assessment?.questionnaireData?.eyeContact || ""}
+                  onChange={(e) =>
+                    updateAssessment.mutate({
+                      questionnaireData: {
+                        ...(assessment?.questionnaireData || {}),
+                        eyeContact: e.target.value,
+                      } as QuestionnaireData,
+                    })
+                  }
+                  className="min-h-[100px]"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>How does the child respond to their name?</Label>
-              <Textarea
-                placeholder="Describe the child's response..."
-                value={assessment?.questionnaireData?.nameResponse || ""}
-                onChange={(e) =>
-                  updateAssessment.mutate({
-                    questionnaireData: {
-                      ...(assessment?.questionnaireData || {}),
-                      nameResponse: e.target.value,
-                    } as QuestionnaireData,
-                  })
-                }
-              />
+              <div className="space-y-2">
+                <Label className="text-base">How does the child respond to their name?</Label>
+                <Textarea
+                  placeholder="Describe the child's response..."
+                  value={assessment?.questionnaireData?.nameResponse || ""}
+                  onChange={(e) =>
+                    updateAssessment.mutate({
+                      questionnaireData: {
+                        ...(assessment?.questionnaireData || {}),
+                        nameResponse: e.target.value,
+                      } as QuestionnaireData,
+                    })
+                  }
+                  className="min-h-[100px]"
+                />
+              </div>
             </div>
-
-            <Button
-              onClick={() => {
-                updateAssessment.mutate({
-                  status: "completed",
-                });
-                navigate("/");
-              }}
-              className="w-full"
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Complete Assessment
-            </Button>
           </CardContent>
         </Card>
       </div>
