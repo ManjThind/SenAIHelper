@@ -9,11 +9,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment } from "@shared/schema";
 import { Camera, Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
+import { analyzeFacialExpression } from "@/lib/facial-expression-analysis";
 
 export default function FacialAnalysisPage() {
   const { id } = useParams();
@@ -22,7 +30,7 @@ export default function FacialAnalysisPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(null);
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -37,31 +45,11 @@ export default function FacialAnalysisPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/assessments/${id}`] });
       toast({
-        title: "Assessment updated",
+        title: "Assessment Updated",
         description: "Facial analysis data has been saved",
       });
     },
   });
-
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        await initializeFaceDetection();
-        setModelsLoaded(true);
-        toast({
-          title: "Ready",
-          description: "Face detection models loaded successfully",
-        });
-      } catch (err) {
-        toast({
-          title: "Model Loading Error",
-          description: "Could not load face detection models",
-          variant: "destructive",
-        });
-      }
-    };
-    loadModels();
-  }, []);
 
   useEffect(() => {
     async function setupCamera() {
@@ -89,27 +77,20 @@ export default function FacialAnalysisPage() {
   }, []);
 
   async function handleCapture() {
-    if (!videoRef.current || !modelsLoaded) return;
+    if (!videoRef.current) return;
 
     setIsAnalyzing(true);
     try {
-      const faceData = await detectFace(videoRef.current);
-      if (!faceData) {
-        toast({
-          title: "No Face Detected",
-          description: "Please ensure the subject is facing the camera",
-          variant: "destructive",
-        });
-        return;
-      }
+      const result = await analyzeFacialExpression(videoRef.current);
+      setAnalysis(result);
 
       updateAssessment.mutate({
-        facialAnalysisData: faceData,
+        facialAnalysisData: result,
       });
     } catch (err) {
       toast({
         title: "Analysis Error",
-        description: "Could not analyze facial features",
+        description: "Could not analyze facial expressions",
         variant: "destructive",
       });
     } finally {
@@ -129,53 +110,113 @@ export default function FacialAnalysisPage() {
           Back to Assessment
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Facial Analysis</h1>
+          <h1 className="text-3xl font-bold">Facial Expression Analysis</h1>
           <p className="text-muted-foreground">
-            Record and analyze facial expressions
+            Analyze emotional expressions and responses
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Video Capture</CardTitle>
-          <CardDescription>
-            Record and analyze facial expressions in real-time
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            {isAnalyzing && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Video Capture</CardTitle>
+            <CardDescription>
+              Record and analyze facial expressions in real-time
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {isAnalyzing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <Loader2 className="h-8 w-8 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={handleCapture}
+              className="w-full"
+              disabled={isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Camera className="mr-2 h-4 w-4" />
+                  Capture Expression
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Analysis Results</CardTitle>
+            <CardDescription>
+              Emotional expression metrics and insights
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analysis ? (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Emotion Metrics</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Emotion</TableHead>
+                        <TableHead>Intensity</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(analysis.metrics).map(([key, value]) => (
+                        <TableRow key={key}>
+                          <TableCell className="capitalize">
+                            {key}
+                          </TableCell>
+                          <TableCell>{(Number(value) * 100).toFixed(1)}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Suggestions</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {analysis.suggestions.map((suggestion: string, index: number) => (
+                      <li key={index} className="text-muted-foreground">
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Overall Emotional Engagement</h3>
+                  <p className="text-2xl font-bold">
+                    {(analysis.overallScore * 100).toFixed(1)}%
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
-          <Button
-            onClick={handleCapture}
-            className="w-full"
-            disabled={!modelsLoaded || isAnalyzing}
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
             ) : (
-              <>
-                <Camera className="mr-2 h-4 w-4" />
-                Capture Expression
-              </>
+              <p className="text-center text-muted-foreground py-8">
+                Capture an expression to see analysis results
+              </p>
             )}
-          </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

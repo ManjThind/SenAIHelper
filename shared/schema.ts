@@ -63,6 +63,21 @@ export interface AttentionAnalysisData {
   timestamp: string;
 }
 
+// Add facial analysis interface
+export interface FacialAnalysisData {
+  metrics: {
+    happiness: number;
+    sadness: number;
+    anger: number;
+    surprise: number;
+    neutral: number;
+    fear: number;
+  };
+  suggestions: string[];
+  overallScore: number;
+  timestamp: string;
+}
+
 // Update assessments table
 export const assessments = pgTable("assessments", {
   id: serial("id").primaryKey(),
@@ -71,7 +86,7 @@ export const assessments = pgTable("assessments", {
   childName: text("child_name").notNull(),
   childAge: integer("child_age").notNull(),
   dateCreated: timestamp("date_created").notNull().defaultNow(),
-  facialAnalysisData: jsonb("facial_analysis_data"),
+  facialAnalysisData: jsonb("facial_analysis_data").$type<FacialAnalysisData | null>(),
   questionnaireData: jsonb("questionnaire_data"),
   voiceAnalysisData: jsonb("voice_analysis_data"),
   writingAnalysisData: jsonb("writing_analysis_data").$type<WritingAnalysisData | null>(),
