@@ -53,7 +53,7 @@ export default function HomePage() {
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Link href="/assessment/select-type"> {/* Changed href here */}
+        <Link href="/assessment/select-type">
           <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -100,6 +100,17 @@ export default function HomePage() {
             </CardHeader>
           </Card>
         </Link>
+        <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
+          <Link href="/child/new">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Plus className="h-5 w-5 mr-2 text-primary" />
+                Add Child Profile
+              </CardTitle>
+              <CardDescription>Create a new child profile</CardDescription>
+            </CardHeader>
+          </Link>
+        </Card>
       </div>
 
       {/* Statistics Cards */}

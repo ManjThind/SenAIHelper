@@ -12,6 +12,14 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("parent"),
 });
 
+// Add avatar interface
+export interface AvatarConfig {
+  type: string;
+  color: string;
+  accessories: string[];
+  name: string;
+}
+
 // Enhanced children table for PPI
 export const children = pgTable("children", {
   id: serial("id").primaryKey(),
@@ -22,6 +30,7 @@ export const children = pgTable("children", {
   gender: text("gender").notNull(),
   medicalHistory: jsonb("medical_history"),
   schoolInformation: jsonb("school_information"),
+  avatar: jsonb("avatar").$type<AvatarConfig>(), // Add avatar field
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

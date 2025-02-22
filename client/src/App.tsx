@@ -11,6 +11,7 @@ import FacialAnalysisPage from "@/pages/facial-analysis-page";
 import VoiceAnalysisPage from "@/pages/voice-analysis-page";
 import InteractiveAssessmentPage from "@/pages/interactive-assessment-page";
 import AssessmentTypePage from "@/pages/assessment-type-page";
+import ChildDetailsPage from "@/pages/child-details-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <ProtectedRoute path="/assessment/:id/facial" component={FacialAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/voice" component={VoiceAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
+      <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
