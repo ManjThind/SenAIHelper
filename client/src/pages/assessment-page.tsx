@@ -105,7 +105,7 @@ export default function AssessmentPage() {
           </CardHeader>
           <CardContent>
             <Button
-              onClick={() => navigate(`/assessment/interactive/${id}`)}
+              onClick={() => navigate(`/assessment/${id}/interactive`)}
               className="w-full"
             >
               <Brain className="mr-2 h-4 w-4" />

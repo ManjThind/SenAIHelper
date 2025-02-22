@@ -18,11 +18,10 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/assessment/select-type" component={AssessmentTypePage} />
-      <ProtectedRoute path="/assessment/new/:type" component={AssessmentPage} />
       <ProtectedRoute path="/assessment/:id" component={AssessmentPage} />
       <ProtectedRoute path="/assessment/:id/facial" component={FacialAnalysisPage} />
       <ProtectedRoute path="/assessment/:id/voice" component={VoiceAnalysisPage} />
-      <ProtectedRoute path="/assessment/interactive/:id" component={InteractiveAssessmentPage} />
+      <ProtectedRoute path="/assessment/:id/interactive" component={InteractiveAssessmentPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
