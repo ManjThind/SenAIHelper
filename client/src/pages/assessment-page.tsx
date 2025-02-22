@@ -15,13 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
 import { ArrowLeft, Camera, Mic, Brain, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
 export default function AssessmentPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const { data: assessment } = useQuery<Assessment>({
+  const { data: assessment, isLoading } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
     enabled: !!id,
   });
@@ -39,6 +40,10 @@ export default function AssessmentPage() {
       });
     },
   });
+
+  if (isLoading) {
+    return <LoadingScreen message="Loading your assessment..." />;
+  }
 
   return (
     <div className="container mx-auto py-8">
