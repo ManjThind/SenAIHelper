@@ -39,8 +39,8 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     store: new PostgresSessionStore({
       pool,
-      tableName: 'user_sessions',
-      createTableIfMissing: false // Changed to false to prevent duplicate creation
+      tableName: 'session', // Updated to match the created table name
+      createTableIfMissing: true // Allow creating the table if it doesn't exist
     }),
     cookie: {
       secure: process.env.NODE_ENV === "production",
@@ -101,7 +101,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user) => {
+    passport.authenticate("local", (err: any, user: any) => {
       if (err) return next(err);
       if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
