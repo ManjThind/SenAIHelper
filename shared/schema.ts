@@ -192,15 +192,32 @@ export interface VoiceAnalysisData {
 export const insertUserSchema = createInsertSchema(users);
 // Update the insertChildSchema to properly handle date conversion
 export const insertChildSchema = createInsertSchema(children, {
-  dateOfBirth: z.string().transform((str) => new Date(str)),
+  dateOfBirth: z.string()
+    .transform((str) => new Date(str))
+    .refine((date) => {
+      const now = new Date();
+      const age = now.getFullYear() - date.getFullYear();
+      return age >= 0 && age <= 18;
+    }, "Child must be between 0 and 18 years old"),
   parentId: z.number(),
+  firstName: z.string()
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z\s-]+$/, "First name can only contain letters, spaces, and hyphens"),
+  lastName: z.string()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z\s-]+$/, "Last name can only contain letters, spaces, and hyphens"),
+  gender: z.string()
+    .min(1, "Please select a gender")
+    .refine((val) => ["male", "female", "other"].includes(val), "Invalid gender selection"),
   medicalHistory: z.record(z.any()).optional().default({}),
   schoolInformation: z.record(z.any()).optional().default({}),
   avatar: z.object({
-    type: z.string(),
-    color: z.string(),
+    type: z.string().min(1, "Please select an avatar type"),
+    color: z.string().min(1, "Please select a color"),
     accessories: z.array(z.string()),
-    name: z.string(),
+    name: z.string().max(50, "Avatar name cannot exceed 50 characters"),
   }).optional().default({
     type: "robot",
     color: "blue",

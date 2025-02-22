@@ -12,6 +12,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Card,
@@ -30,7 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertChildSchema, type InsertChild, type AvatarConfig } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Check, AlertCircle } from "lucide-react";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -89,7 +90,11 @@ export default function ChildDetailsPage() {
         name: "",
       },
     },
+    mode: "onChange", // Enable real-time validation
   });
+
+  // Watch form values for validation state
+  const { isValid, isDirty, errors } = form.formState;
 
   useEffect(() => {
     const subscription = form.watch((value) => {
@@ -189,6 +194,16 @@ export default function ChildDetailsPage() {
     }
   };
 
+  // Helper function to get field validation state
+  const getFieldState = (fieldName: keyof InsertChild) => {
+    const fieldState = form.getFieldState(fieldName);
+    return {
+      isValid: !fieldState.invalid && fieldState.isDirty,
+      isInvalid: fieldState.invalid && fieldState.isDirty,
+      error: fieldState.error?.message,
+    };
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center mb-8">
@@ -222,79 +237,135 @@ export default function ChildDetailsPage() {
                 <FormField
                   control={form.control}
                   name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { isValid, isInvalid, error } = getFieldState("firstName");
+                    return (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              {...field}
+                              className={`pr-8 ${
+                                isValid ? "border-green-500" : isInvalid ? "border-red-500" : ""
+                              }`}
+                            />
+                            {isValid && (
+                              <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                            )}
+                            {isInvalid && (
+                              <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Use letters, spaces, and hyphens only
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
                   control={form.control}
                   name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { isValid, isInvalid, error } = getFieldState("lastName");
+                    return (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              {...field}
+                              className={`pr-8 ${
+                                isValid ? "border-green-500" : isInvalid ? "border-red-500" : ""
+                              }`}
+                            />
+                            {isValid && (
+                              <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                            )}
+                            {isInvalid && (
+                              <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Use letters, spaces, and hyphens only
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          max={new Date().toISOString().split('T')[0]}
-                          onChange={(e) => {
-                            const date = new Date(e.target.value);
-                            if (!isNaN(date.getTime())) {
-                              field.onChange(e.target.value);
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { isValid, isInvalid, error } = getFieldState("dateOfBirth");
+                    return (
+                      <FormItem>
+                        <FormLabel>Date of Birth</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input
+                              type="date"
+                              {...field}
+                              max={new Date().toISOString().split('T')[0]}
+                              className={`${
+                                isValid ? "border-green-500" : isInvalid ? "border-red-500" : ""
+                              }`}
+                              onChange={(e) => {
+                                const date = new Date(e.target.value);
+                                if (!isNaN(date.getTime())) {
+                                  field.onChange(e.target.value);
+                                }
+                              }}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Child must be between 0 and 18 years old
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
                   control={form.control}
                   name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gender</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { isValid, isInvalid, error } = getFieldState("gender");
+                    return (
+                      <FormItem>
+                        <FormLabel>Gender</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger
+                              className={`${
+                                isValid ? "border-green-500" : isInvalid ? "border-red-500" : ""
+                              }`}
+                            >
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </CardContent>
             </Card>
@@ -416,7 +487,7 @@ export default function ChildDetailsPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={createChild.isPending}
+            disabled={createChild.isPending || !isValid || !isDirty}
           >
             {createChild.isPending ? (
               <>
