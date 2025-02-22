@@ -135,7 +135,10 @@ export default function ChildDetailsPage() {
   };
 
   const onSubmit = (data: InsertChild) => {
-    createChild.mutate(data);
+    createChild.mutate({
+      ...data,
+      dateOfBirth: new Date(data.dateOfBirth), // Convert string to Date
+    });
   };
 
   return (
@@ -206,6 +209,7 @@ export default function ChildDetailsPage() {
                         <Input
                           type="date"
                           {...field}
+                          value={field.value}
                         />
                       </FormControl>
                       <FormMessage />

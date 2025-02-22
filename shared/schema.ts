@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// User table remains the same
+// User table 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -126,9 +126,14 @@ export interface VoiceAnalysisData {
 
 // Create insert schemas
 export const insertUserSchema = createInsertSchema(users);
-export const insertChildSchema = createInsertSchema(children);
+export const insertChildSchema = createInsertSchema(children, {
+  dateOfBirth: z.coerce.date(),
+});
 export const insertAssessmentSchema = createInsertSchema(assessments);
-export const insertReportSchema = createInsertSchema(reports);
+export const insertReportSchema = createInsertSchema(reports, {
+  followUpDate: z.coerce.date(),
+  dateGenerated: z.coerce.date(),
+});
 
 // Export types
 export type InsertUser = z.infer<typeof insertUserSchema>;
