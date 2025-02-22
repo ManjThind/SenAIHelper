@@ -19,6 +19,7 @@ export interface IStorage {
   updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment>;
   createReport(report: Omit<Report, "id">): Promise<Report>;
   getReportByAssessmentId(assessmentId: number): Promise<Report | undefined>;
+  getAllReports(): Promise<Report[]>; // Add new method
 }
 
 export class DatabaseStorage implements IStorage {
@@ -48,19 +49,16 @@ export class DatabaseStorage implements IStorage {
 
   async createChild(child: InsertChild): Promise<Child> {
     try {
-      // Parse and validate the date
       const dateOfBirth = new Date(child.dateOfBirth);
       if (isNaN(dateOfBirth.getTime())) {
         throw new Error("Invalid date of birth format");
       }
 
-      // Validate required fields
       if (!child.firstName?.trim()) throw new Error("First name is required");
       if (!child.lastName?.trim()) throw new Error("Last name is required");
       if (!child.gender?.trim()) throw new Error("Gender is required");
       if (!child.parentId) throw new Error("Parent ID is required");
 
-      // Create the child record with properly formatted data
       const [newChild] = await db
         .insert(children)
         .values({
@@ -147,6 +145,10 @@ export class DatabaseStorage implements IStorage {
       .from(reports)
       .where(eq(reports.assessmentId, assessmentId));
     return report;
+  }
+
+  async getAllReports(): Promise<Report[]> {
+    return db.select().from(reports).orderBy(reports.dateGenerated);
   }
 }
 

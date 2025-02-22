@@ -107,6 +107,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add new route to get all reports
+  app.get("/api/reports", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const reports = await storage.getAllReports();
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
   app.get("/api/reports/:assessmentId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const report = await storage.getReportByAssessmentId(parseInt(req.params.assessmentId));

@@ -15,6 +15,8 @@ import AssessmentTypePage from "@/pages/assessment-type-page";
 import ChildDetailsPage from "@/pages/child-details-page";
 import ChildrenListPage from "@/pages/children-list-page";
 import AccessoryShopPage from "@/pages/accessory-shop-page";
+import ReportsHomePage from "@/pages/reports-home-page";
+import ReportPage from "@/pages/report-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -29,6 +31,8 @@ function Router() {
       <ProtectedRoute path="/child/new" component={ChildDetailsPage} />
       <ProtectedRoute path="/children" component={ChildrenListPage} />
       <ProtectedRoute path="/shop" component={AccessoryShopPage} />
+      <ProtectedRoute path="/reports" component={ReportsHomePage} />
+      <ProtectedRoute path="/report/:id" component={ReportPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
