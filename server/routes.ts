@@ -5,7 +5,6 @@ import { storage } from "./storage";
 import { insertAssessmentSchema, insertReportSchema, insertChildSchema, shopItems, ownedItems, AIDiagnosticData } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { Messages } from '@anthropic-ai/sdk'
 import Anthropic from '@anthropic-ai/sdk';
 
 // the newest Anthropic model is "claude-3-5-sonnet-20241022" which was released October 22, 2024
