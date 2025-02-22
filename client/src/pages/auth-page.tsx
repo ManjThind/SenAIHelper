@@ -40,20 +40,27 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="mb-8 text-center">
+    <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="flex flex-col items-center justify-center gap-4">
             <img 
-              src="/SiliconSquaresLogoContact.png" 
+              src="SiliconSquaresLogoContact.png" 
               alt="Silicon Squares Logo" 
-              className="mx-auto h-24 mb-4"
+              className="w-32 h-32 object-contain"
             />
-            <h2 className="text-2xl font-bold text-gray-900">
-              SEN Assessment Tool
-            </h2>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-primary">
+                AI ASSESSMENT
+              </h1>
+              <p className="text-muted-foreground">
+                Intelligent SEN Diagnostic Tool
+              </p>
+            </div>
           </div>
+        </div>
 
-        <Tabs defaultValue="login" className="w-full max-w-md">
+        <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
@@ -155,23 +162,6 @@ export default function AuthPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-
-      <div className="hidden lg:flex flex-1 bg-primary/5 items-center justify-center p-8">
-        <div className="max-w-md text-center">
-          <img 
-            src="/SiliconSquaresLogoContact.png" 
-            alt="Silicon Squares Logo" 
-            className="h-32 mx-auto mb-8"
-          />
-          <h1 className="text-4xl font-bold mb-4">
-            AI-Powered SEN Assessment Tool
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Helping identify early signs of autism and ADHD through advanced facial
-            analysis and behavioral assessment.
-          </p>
-        </div>
       </div>
     </div>
   );
