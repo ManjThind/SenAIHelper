@@ -1,3 +1,4 @@
+import { Mic, Camera, Brain, ArrowLeft, Activity, FileText, Eye, Hand, Zap } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -15,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Mic, Camera, Brain, ArrowLeft, Activity, FileText, Eye, Hand, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -78,6 +78,48 @@ const assessmentTypes = [
     description: "Monitor and analyze behavioral patterns",
     icon: Activity,
     color: "text-orange-500",
+  },
+  {
+    id: "fineMotor",
+    title: "Fine Motor Control Evaluation",
+    description: "Evaluate fine motor control",
+    icon: Hand,
+    color: "text-rose-600",
+  },
+  {
+    id: "handEye",
+    title: "Hand-Eye Coordination Tests",
+    description: "Assess hand-eye coordination",
+    icon: Eye,
+    color: "text-indigo-600",
+  },
+  {
+    id: "gesture",
+    title: "Gesture Recognition and Analysis",
+    description: "Analyze gestures and body language",
+    icon: Hand,
+    color: "text-rose-700",
+  },
+  {
+    id: "visualSensitivity",
+    title: "Visual Sensitivity Tests",
+    description: "Evaluate visual sensitivity",
+    icon: Eye,
+    color: "text-indigo-700",
+  },
+  {
+    id: "auditoryProcessing",
+    title: "Auditory Processing Evaluation",
+    description: "Assess auditory processing skills",
+    icon: Mic,
+    color: "text-blue-600",
+  },
+  {
+    id: "tactileResponse",
+    title: "Tactile Response Analysis",
+    description: "Analyze responses to tactile stimuli",
+    icon: Hand,
+    color: "text-rose-800",
   },
 ];
 
