@@ -14,7 +14,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
 import { Redirect } from "wouter";
-import { BrainCircuit } from "lucide-react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -43,6 +42,17 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center p-8">
+        <div className="mb-8 text-center">
+            <img 
+              src="/SiliconSquaresLogoContact.png" 
+              alt="Silicon Squares Logo" 
+              className="mx-auto h-24 mb-4"
+            />
+            <h2 className="text-2xl font-bold text-gray-900">
+              SEN Assessment Tool
+            </h2>
+          </div>
+
         <Tabs defaultValue="login" className="w-full max-w-md">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
@@ -149,7 +159,11 @@ export default function AuthPage() {
 
       <div className="hidden lg:flex flex-1 bg-primary/5 items-center justify-center p-8">
         <div className="max-w-md text-center">
-          <BrainCircuit className="h-16 w-16 mx-auto mb-6 text-primary" />
+          <img 
+            src="/SiliconSquaresLogoContact.png" 
+            alt="Silicon Squares Logo" 
+            className="h-32 mx-auto mb-8"
+          />
           <h1 className="text-4xl font-bold mb-4">
             AI-Powered SEN Assessment Tool
           </h1>
