@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData, VoiceAnalysisData } from "@shared/schema";
-import { Camera, Mic, Check, Square, Loader2 } from "lucide-react";
+import { Camera, Mic, Check, Square, Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
 
@@ -195,6 +195,22 @@ export default function AssessmentPage() {
 
   return (
     <div className="container mx-auto py-8">
+      <div className="flex items-center mb-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/assessment/new")}
+          className="mr-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Assessment Types
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Conduct Assessment</h1>
+          <p className="text-muted-foreground">
+            Record and analyze assessment data
+          </p>
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Facial Analysis Card */}
         <Card>
@@ -218,8 +234,8 @@ export default function AssessmentPage() {
                 </div>
               )}
             </div>
-            <Button 
-              onClick={handleCapture} 
+            <Button
+              onClick={handleCapture}
               className="w-full"
               disabled={!modelsLoaded || isAnalyzing}
             >

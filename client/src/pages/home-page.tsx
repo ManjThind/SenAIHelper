@@ -19,11 +19,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { 
-  FileText, 
-  Plus, 
-  Activity, 
-  BarChart2, 
+import {
+  FileText,
+  Plus,
+  Activity,
+  BarChart2,
   Settings,
   Users
 } from "lucide-react";
@@ -53,7 +53,7 @@ export default function HomePage() {
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Link href="/assessment/new">
+        <Link href="/assessment/select-type"> {/* Changed href here */}
           <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center">
