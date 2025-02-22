@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Assessment, QuestionnaireData, VoiceAnalysisData } from "@shared/schema";
+import { Assessment, QuestionnaireData } from "@shared/schema";
 import { Camera, Mic, Check, Square, Loader2, ArrowLeft } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
@@ -33,6 +33,10 @@ export default function AssessmentPage() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [voiceMetrics, setVoiceMetrics] = useState<VoiceMetrics | null>(null);
   const [voiceAnalysisReady, setVoiceAnalysisReady] = useState(false);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -76,7 +80,9 @@ export default function AssessmentPage() {
   useEffect(() => {
     async function setupVoiceAnalysis() {
       try {
-        await initializeVoiceAnalysis();
+        const { audioContext, analyser } = await initializeVoiceAnalysis();
+        setAudioContext(audioContext);
+        setAnalyser(analyser);
         setVoiceAnalysisReady(true);
         toast({
           title: "Voice Analysis Ready",
@@ -91,18 +97,26 @@ export default function AssessmentPage() {
       }
     }
     setupVoiceAnalysis();
+
+    return () => {
+      if (audioContext) {
+        audioContext.close();
+      }
+    };
   }, []);
 
   const startRecording = async () => {
     try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(audioStream);
-      const { audioContext, analyser } = await initializeVoiceAnalysis();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      const source = audioContext.createMediaStreamSource(audioStream);
-      source.connect(analyser);
+      if (!audioContext || !analyser) {
+        throw new Error('Voice analysis not initialized');
+      }
 
+      const source = audioContext.createMediaStreamSource(stream);
       const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+      source.connect(analyser);
       analyser.connect(processor);
       processor.connect(audioContext.destination);
 
@@ -111,7 +125,6 @@ export default function AssessmentPage() {
         const metrics = await analyzeAudioStream(inputData);
         setVoiceMetrics(metrics);
 
-        // Fix the spread of undefined issue
         const currentVoiceData = assessment?.voiceAnalysisData || {};
         updateAssessment.mutate({
           voiceAnalysisData: {
@@ -122,6 +135,9 @@ export default function AssessmentPage() {
         });
       };
 
+      processorRef.current = processor;
+
+      const mediaRecorder = new MediaRecorder(stream);
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setRecordedChunks((chunks) => [...chunks, event.data]);
@@ -144,9 +160,12 @@ export default function AssessmentPage() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      setRecordedChunks([]);
 
-      // Save the recording
+      if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current = null;
+      }
+
       const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
       const audioUrl = URL.createObjectURL(audioBlob);
 
@@ -157,6 +176,8 @@ export default function AssessmentPage() {
           recordings: [...(currentVoiceData.recordings || []), audioUrl]
         }
       });
+
+      setRecordedChunks([]);
     }
   };
 
@@ -343,11 +364,11 @@ export default function AssessmentPage() {
                 </div>
               )}
 
-              {(assessment?.voiceAnalysisData as VoiceAnalysisData)?.recordings?.length > 0 && (
+              {(assessment?.voiceAnalysisData)?.recordings?.length > 0 && (
                 <div className="space-y-2">
                   <Label>Recorded Samples</Label>
                   <div className="space-y-2">
-                    {(assessment.voiceAnalysisData as VoiceAnalysisData).recordings.map((recording, index) => (
+                    {(assessment.voiceAnalysisData).recordings.map((recording, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <audio src={recording} controls className="w-full" />
                       </div>
@@ -372,11 +393,11 @@ export default function AssessmentPage() {
               <Label>Does the child maintain eye contact?</Label>
               <Textarea
                 placeholder="Describe the child's eye contact behavior..."
-                value={(assessment?.questionnaireData as QuestionnaireData)?.eyeContact || ""}
+                value={(assessment?.questionnaireData)?.eyeContact || ""}
                 onChange={(e) =>
                   updateAssessment.mutate({
                     questionnaireData: {
-                      ...(assessment?.questionnaireData as QuestionnaireData || {}),
+                      ...(assessment?.questionnaireData || {}),
                       eyeContact: e.target.value,
                     },
                   })
@@ -388,11 +409,11 @@ export default function AssessmentPage() {
               <Label>How does the child respond to their name?</Label>
               <Textarea
                 placeholder="Describe the child's response..."
-                value={(assessment?.questionnaireData as QuestionnaireData)?.nameResponse || ""}
+                value={(assessment?.questionnaireData)?.nameResponse || ""}
                 onChange={(e) =>
                   updateAssessment.mutate({
                     questionnaireData: {
-                      ...(assessment?.questionnaireData as QuestionnaireData || {}),
+                      ...(assessment?.questionnaireData || {}),
                       nameResponse: e.target.value,
                     },
                   })
