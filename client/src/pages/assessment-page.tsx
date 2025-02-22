@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData, VoiceAnalysisData } from "@shared/schema";
-import { Camera, Mic, Check, Square } from "lucide-react";
+import { Camera, Mic, Check, Square, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
 
 export default function AssessmentPage() {
   const { id } = useParams();
@@ -26,6 +27,8 @@ export default function AssessmentPage() {
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [modelsLoaded, setModelsLoaded] = useState(false);
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -46,6 +49,27 @@ export default function AssessmentPage() {
     },
   });
 
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await initializeFaceDetection();
+        setModelsLoaded(true);
+        toast({
+          title: "Ready",
+          description: "Face detection models loaded successfully",
+        });
+      } catch (err) {
+        toast({
+          title: "Model Loading Error",
+          description: "Could not load face detection models",
+          variant: "destructive",
+        });
+      }
+    };
+    loadModels();
+  }, []);
+
+  // Voice recording functionality
   const startRecording = async () => {
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -114,6 +138,7 @@ export default function AssessmentPage() {
     }
   };
 
+  // Camera and face detection
   useEffect(() => {
     async function setupCamera() {
       try {
@@ -140,14 +165,22 @@ export default function AssessmentPage() {
   }, []);
 
   async function handleCapture() {
-    if (!videoRef.current || !window.FaceDetector) return;
+    if (!videoRef.current || !modelsLoaded) return;
 
+    setIsAnalyzing(true);
     try {
-      const detector = new window.FaceDetector();
-      const faces = await detector.detect(videoRef.current);
+      const faceData = await detectFace(videoRef.current);
+      if (!faceData) {
+        toast({
+          title: "No Face Detected",
+          description: "Please ensure the subject is facing the camera",
+          variant: "destructive",
+        });
+        return;
+      }
 
       updateAssessment.mutate({
-        facialAnalysisData: faces,
+        facialAnalysisData: faceData,
       });
     } catch (err) {
       toast({
@@ -155,6 +188,8 @@ export default function AssessmentPage() {
         description: "Could not analyze facial features",
         variant: "destructive",
       });
+    } finally {
+      setIsAnalyzing(false);
     }
   }
 
@@ -177,10 +212,28 @@ export default function AssessmentPage() {
                 playsInline
                 className="w-full h-full object-cover"
               />
+              {isAnalyzing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <Loader2 className="h-8 w-8 animate-spin text-white" />
+                </div>
+              )}
             </div>
-            <Button onClick={handleCapture} className="w-full">
-              <Camera className="mr-2 h-4 w-4" />
-              Capture Expression
+            <Button 
+              onClick={handleCapture} 
+              className="w-full"
+              disabled={!modelsLoaded || isAnalyzing}
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Camera className="mr-2 h-4 w-4" />
+                  Capture Expression
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -230,7 +283,7 @@ export default function AssessmentPage() {
         </Card>
 
         {/* Behavioral Assessment Card */}
-        <Card>
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Behavioral Assessment</CardTitle>
             <CardDescription>
