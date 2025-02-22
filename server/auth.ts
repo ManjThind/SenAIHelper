@@ -6,6 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 declare global {
   namespace Express {
@@ -29,14 +31,22 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  const PostgresSessionStore = connectPg(session);
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sen-assessment-secret", // Using a default secret for development, but prioritize env variable
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
+    store: new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+      tableName: 'user_sessions'
+    }),
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      httpOnly: true,
+      sameSite: 'lax'
     },
   };
 
@@ -90,8 +100,23 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user) => {
+      if (err) return next(err);
+      if (!user) return res.status(401).json({ message: "Invalid credentials" });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        if (req.body.rememberMe) {
+          // If rememberMe is true, the session will last for 30 days
+          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
+        } else {
+          // Otherwise, it will last until the browser closes
+          req.session.cookie.maxAge = undefined;
+        }
+        res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

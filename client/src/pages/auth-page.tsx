@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
 import { Redirect } from "wouter";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -15,6 +16,7 @@ export default function AuthPage() {
     defaultValues: {
       username: "",
       password: "",
+      rememberMe: false,
     },
   });
 
@@ -74,6 +76,13 @@ export default function AuthPage() {
                       {...loginForm.register("password")}
                       required
                     />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="rememberMe" 
+                      {...loginForm.register("rememberMe")}
+                    />
+                    <Label htmlFor="rememberMe">Remember me</Label>
                   </div>
                   <Button
                     type="submit"

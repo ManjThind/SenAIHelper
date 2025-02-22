@@ -28,9 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertChildSchema, type InsertChild } from "@shared/schema";
+import { insertChildSchema, type InsertChild, AvatarConfig } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
 
 const avatarTypes = [
@@ -55,32 +55,29 @@ const avatarAccessories = [
   { id: "cape", name: "Cape" },
 ];
 
+const defaultAvatar: AvatarConfig = {
+  type: "robot",
+  color: "blue",
+  accessories: [],
+  name: "",
+};
+
 export default function ChildDetailsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
-  const [previewConfig, setPreviewConfig] = useState({
-    type: "robot",
-    color: "blue",
-    accessories: [] as string[],
-    name: "",
-  });
+  const [previewConfig, setPreviewConfig] = useState<AvatarConfig>(defaultAvatar);
 
   const form = useForm<InsertChild>({
     resolver: zodResolver(insertChildSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
-      dateOfBirth: new Date().toISOString(),
+      dateOfBirth: new Date().toISOString().split('T')[0],
       gender: "",
       medicalHistory: {},
       schoolInformation: {},
-      avatar: {
-        type: "robot",
-        color: "blue",
-        accessories: [],
-        name: "",
-      },
+      avatar: defaultAvatar,
     },
   });
 
@@ -88,8 +85,10 @@ export default function ChildDetailsPage() {
     const subscription = form.watch((value) => {
       if (value.avatar) {
         setPreviewConfig({
-          ...value.avatar,
+          type: value.avatar.type || defaultAvatar.type,
+          color: value.avatar.color || defaultAvatar.color,
           accessories: selectedAccessories,
+          name: value.avatar.name || defaultAvatar.name,
         });
       }
     });
@@ -98,7 +97,13 @@ export default function ChildDetailsPage() {
 
   const createChild = useMutation({
     mutationFn: async (data: InsertChild) => {
-      const res = await apiRequest("POST", "/api/children", data);
+      const res = await apiRequest("POST", "/api/children", {
+        ...data,
+        avatar: {
+          ...data.avatar,
+          accessories: selectedAccessories,
+        },
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -130,13 +135,7 @@ export default function ChildDetailsPage() {
   };
 
   const onSubmit = (data: InsertChild) => {
-    createChild.mutate({
-      ...data,
-      avatar: {
-        ...data.avatar,
-        accessories: selectedAccessories,
-      },
-    });
+    createChild.mutate(data);
   };
 
   return (
@@ -207,7 +206,6 @@ export default function ChildDetailsPage() {
                         <Input
                           type="date"
                           {...field}
-                          value={field.value?.split('T')[0]}
                         />
                       </FormControl>
                       <FormMessage />
@@ -242,7 +240,8 @@ export default function ChildDetailsPage() {
                 />
 
                 <Button type="submit" className="w-full">
-                  Create Profile
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Profile
                 </Button>
               </form>
             </Form>
@@ -361,6 +360,15 @@ export default function ChildDetailsPage() {
                     </FormItem>
                   )}
                 />
+
+                <Button
+                  type="submit"
+                  onClick={form.handleSubmit(onSubmit)}
+                  className="w-full"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Create Profile with Avatar
+                </Button>
               </form>
             </Form>
           </CardContent>
