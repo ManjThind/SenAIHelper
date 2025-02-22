@@ -18,6 +18,7 @@ export interface AvatarConfig {
   color: string;
   accessories: string[];
   name: string;
+  effect?: string; // Added effect property
 }
 
 // Enhanced children table for PPI

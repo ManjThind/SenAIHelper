@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Users } from "lucide-react";
+import { Link } from "wouter";
 
 export function Nav() {
   const { logoutMutation } = useAuth();
@@ -8,7 +9,15 @@ export function Nav() {
   return (
     <nav className="border-b">
       <div className="container flex h-16 items-center justify-between">
-        <div className="font-semibold">SEN Assessment Tool</div>
+        <div className="flex items-center space-x-4">
+          <div className="font-semibold">SEN Assessment Tool</div>
+          <Link href="/children">
+            <Button variant="ghost" size="sm" className="flex items-center">
+              <Users className="h-4 w-4 mr-2" />
+              Children
+            </Button>
+          </Link>
+        </div>
         <Button 
           variant="ghost" 
           size="sm"
