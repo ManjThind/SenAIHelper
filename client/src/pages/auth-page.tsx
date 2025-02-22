@@ -41,6 +41,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex">
+      {/* Left side with login/register form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <Tabs defaultValue="login" className="w-full">
@@ -148,17 +149,18 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-1 bg-primary/5 items-center justify-center p-8">
-        <div className="max-w-md text-center">
+      {/* Right side with branding */}
+      <div className="hidden lg:flex flex-1 bg-primary/5 p-8">
+        <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
           <img 
             src="/SiliconSquaresLogoContact.png" 
             alt="Silicon Squares Logo" 
-            className="w-32 h-32 mx-auto mb-8 object-contain"
+            className="w-48 h-48 mb-8 object-contain"
           />
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
             AI-Powered SEN Assessment Tool
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground max-w-md">
             Helping identify early signs of autism and ADHD through advanced facial
             analysis and behavioral assessment.
           </p>
