@@ -156,7 +156,7 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-background"></div>
         <div className="relative h-full flex flex-col items-center justify-center p-12 text-center">
           <div className="space-y-8">
-            <div className="rounded-full bg-white/10 p-8 backdrop-blur-sm">
+            <div className="rounded-full bg-white/10 p-8 backdrop-blur-sm mb-8">
               <img
                 src="/SiliconSquaresLogoContact.png"
                 alt="Silicon Squares Logo"
