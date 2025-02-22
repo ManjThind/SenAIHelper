@@ -152,21 +152,27 @@ export default function AuthPage() {
       </div>
 
       {/* Right side with branding */}
-      <div className="hidden lg:flex relative bg-primary/5">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
-        <div className="relative w-full flex flex-col items-center justify-center p-8">
-          <img
-            src="/SiliconSquaresLogoContact.png"
-            alt="Silicon Squares Logo"
-            className="w-48 h-48 mb-8 object-contain"
-          />
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            AI-Powered SEN Assessment Tool
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-md text-center">
-            Helping identify early signs of autism and ADHD through advanced facial
-            analysis and behavioral assessment.
-          </p>
+      <div className="hidden lg:block relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-background"></div>
+        <div className="relative h-full flex flex-col items-center justify-center p-12 text-center">
+          <div className="space-y-8">
+            <div className="rounded-full bg-white/10 p-8 backdrop-blur-sm">
+              <img
+                src="/SiliconSquaresLogoContact.png"
+                alt="Silicon Squares Logo"
+                className="w-32 h-32 object-contain"
+              />
+            </div>
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+                AI-Powered SEN Assessment Tool
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-sm mx-auto">
+                Helping identify early signs of autism and ADHD through advanced facial
+                analysis and behavioral assessment.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
