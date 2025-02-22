@@ -19,7 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { FileText, Plus, Activity } from "lucide-react";
+import { 
+  FileText, 
+  Plus, 
+  Activity, 
+  BarChart2, 
+  Settings,
+  Users
+} from "lucide-react";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -28,8 +35,13 @@ export default function HomePage() {
     queryKey: ["/api/assessments"],
   });
 
+  // Calculate statistics
+  const completedAssessments = assessments?.filter(a => a.status === "completed").length || 0;
+  const pendingAssessments = assessments?.filter(a => a.status === "pending").length || 0;
+
   return (
     <div className="container mx-auto py-8">
+      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Welcome, {user?.fullName}</h1>
@@ -37,14 +49,60 @@ export default function HomePage() {
             Manage your SEN assessments and reports
           </p>
         </div>
+      </div>
+
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Link href="/assessment/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Assessment
-          </Button>
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Plus className="h-5 w-5 mr-2 text-primary" />
+                New Assessment
+              </CardTitle>
+              <CardDescription>Start a new evaluation</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/reports">
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-primary" />
+                Reports
+              </CardTitle>
+              <CardDescription>View detailed reports</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/progress">
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart2 className="h-5 w-5 mr-2 text-primary" />
+                Progress
+              </CardTitle>
+              <CardDescription>Track improvements</CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/settings">
+          <Card className="hover:bg-accent/5 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Settings className="h-5 w-5 mr-2 text-primary" />
+                Settings
+              </CardTitle>
+              <CardDescription>Configure your account</CardDescription>
+            </CardHeader>
+          </Card>
         </Link>
       </div>
 
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader>
@@ -60,8 +118,35 @@ export default function HomePage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Completed</CardTitle>
+            <CardDescription>Finished assessments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-green-500 mr-2" />
+              <span className="text-3xl font-bold">{completedAssessments}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending</CardTitle>
+            <CardDescription>In-progress assessments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-yellow-500 mr-2" />
+              <span className="text-3xl font-bold">{pendingAssessments}</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Recent Assessments Table */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Assessments</CardTitle>
