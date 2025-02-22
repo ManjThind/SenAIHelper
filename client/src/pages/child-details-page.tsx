@@ -155,9 +155,30 @@ export default function ChildDetailsPage() {
 
   const onSubmit = async (data: InsertChild) => {
     try {
-      await createChild.mutateAsync(data);
+      // Ensure date is properly formatted
+      const formattedData = {
+        ...data,
+        parentId: user?.id || 0,
+        dateOfBirth: new Date(data.dateOfBirth),
+        avatar: {
+          type: data.avatar?.type || defaultAvatar.type,
+          color: data.avatar?.color || defaultAvatar.color,
+          accessories: selectedAccessories,
+          name: data.avatar?.name || defaultAvatar.name,
+        },
+        // Initialize empty objects for optional fields
+        medicalHistory: {},
+        schoolInformation: {},
+      };
+
+      await createChild.mutateAsync(formattedData);
     } catch (error) {
       console.error("Form submission error:", error);
+      toast({
+        title: "Error creating child profile",
+        description: error instanceof Error ? error.message : "Failed to create child profile",
+        variant: "destructive",
+      });
     }
   };
 
@@ -229,6 +250,13 @@ export default function ChildDetailsPage() {
                         <Input
                           type="date"
                           {...field}
+                          max={new Date().toISOString().split('T')[0]}
+                          onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            if (!isNaN(date.getTime())) {
+                              field.onChange(e.target.value);
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -378,7 +406,7 @@ export default function ChildDetailsPage() {
             </Card>
           </div>
 
-          <Button 
+          <Button
             type="submit"
             className="w-full"
             disabled={createChild.isPending}

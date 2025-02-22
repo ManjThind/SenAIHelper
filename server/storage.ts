@@ -47,20 +47,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChild(child: InsertChild): Promise<Child> {
-    const [newChild] = await db
-      .insert(children)
-      .values({
-        ...child,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
+    try {
+      // Ensure required fields are present
+      if (!child.firstName || !child.lastName || !child.gender || !child.parentId) {
+        throw new Error("Missing required fields");
+      }
 
-    if (!newChild) {
+      // Ensure date is valid
+      const dateOfBirth = new Date(child.dateOfBirth);
+      if (isNaN(dateOfBirth.getTime())) {
+        throw new Error("Invalid date of birth");
+      }
+
+      const [newChild] = await db
+        .insert(children)
+        .values({
+          ...child,
+          dateOfBirth, // Use the parsed date
+          medicalHistory: child.medicalHistory || {},
+          schoolInformation: child.schoolInformation || {},
+          avatar: child.avatar || {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      if (!newChild) {
+        throw new Error("Failed to create child profile");
+      }
+
+      return newChild;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to create child profile: ${error.message}`);
+      }
       throw new Error("Failed to create child profile");
     }
-
-    return newChild;
   }
 
   async getChildrenByParentId(parentId: number): Promise<Child[]> {
