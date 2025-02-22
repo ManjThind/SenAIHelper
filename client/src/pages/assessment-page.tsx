@@ -393,13 +393,13 @@ export default function AssessmentPage() {
               <Label>Does the child maintain eye contact?</Label>
               <Textarea
                 placeholder="Describe the child's eye contact behavior..."
-                value={(assessment?.questionnaireData)?.eyeContact || ""}
+                value={assessment?.questionnaireData?.eyeContact || ""}
                 onChange={(e) =>
                   updateAssessment.mutate({
                     questionnaireData: {
                       ...(assessment?.questionnaireData || {}),
                       eyeContact: e.target.value,
-                    },
+                    } as QuestionnaireData,
                   })
                 }
               />
@@ -409,13 +409,13 @@ export default function AssessmentPage() {
               <Label>How does the child respond to their name?</Label>
               <Textarea
                 placeholder="Describe the child's response..."
-                value={(assessment?.questionnaireData)?.nameResponse || ""}
+                value={assessment?.questionnaireData?.nameResponse || ""}
                 onChange={(e) =>
                   updateAssessment.mutate({
                     questionnaireData: {
                       ...(assessment?.questionnaireData || {}),
                       nameResponse: e.target.value,
-                    },
+                    } as QuestionnaireData,
                   })
                 }
               />

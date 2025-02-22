@@ -1,8 +1,11 @@
-import { User, Assessment, Report, InsertUser } from "@shared/schema";
+import { User, Assessment, Report, InsertUser, children, users, assessments, reports } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   sessionStore: session.Store;
@@ -16,87 +19,79 @@ export interface IStorage {
   getReportByAssessmentId(assessmentId: number): Promise<Report | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private assessments: Map<number, Assessment>;
-  private reports: Map<number, Report>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  currentId: number;
 
   constructor() {
-    this.users = new Map();
-    this.assessments = new Map();
-    this.reports = new Map();
-    this.currentId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { id, ...insertUser };
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
   async createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment> {
-    const id = this.currentId++;
-    const newAssessment = {
-      id,
-      ...assessment,
-      dateCreated: new Date(),
-      facialAnalysisData: null,
-      questionnaireData: null,
-      status: "in_progress"
-    } as Assessment;
-    this.assessments.set(id, newAssessment);
+    const [newAssessment] = await db
+      .insert(assessments)
+      .values({
+        ...assessment,
+        dateCreated: new Date(),
+        status: "in_progress",
+      })
+      .returning();
     return newAssessment;
   }
 
   async getAssessmentsByUserId(userId: number): Promise<Assessment[]> {
-    return Array.from(this.assessments.values()).filter(
-      (assessment) => assessment.userId === userId,
-    );
+    return db.select().from(assessments).where(eq(assessments.userId, userId));
   }
 
-  async updateAssessment(
-    id: number,
-    update: Partial<Assessment>,
-  ): Promise<Assessment> {
-    const assessment = this.assessments.get(id);
-    if (!assessment) throw new Error("Assessment not found");
-    const updated = { ...assessment, ...update };
-    this.assessments.set(id, updated);
+  async updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment> {
+    const [updated] = await db
+      .update(assessments)
+      .set({
+        ...update,
+        updatedAt: new Date(),
+      })
+      .where(eq(assessments.id, id))
+      .returning();
+
+    if (!updated) throw new Error("Assessment not found");
     return updated;
   }
 
   async createReport(report: Omit<Report, "id">): Promise<Report> {
-    const id = this.currentId++;
-    const newReport = {
-      id,
-      ...report,
-      dateGenerated: new Date()
-    } as Report;
-    this.reports.set(id, newReport);
+    const [newReport] = await db
+      .insert(reports)
+      .values({
+        ...report,
+        dateGenerated: new Date(),
+      })
+      .returning();
     return newReport;
   }
 
   async getReportByAssessmentId(assessmentId: number): Promise<Report | undefined> {
-    return Array.from(this.reports.values()).find(
-      (report) => report.assessmentId === assessmentId,
-    );
+    const [report] = await db
+      .select()
+      .from(reports)
+      .where(eq(reports.assessmentId, assessmentId));
+    return report;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
