@@ -219,7 +219,7 @@ export default function AssessmentPage() {
       <div className="flex items-center mb-8">
         <Button
           variant="ghost"
-          onClick={() => navigate("/assessment/new")}
+          onClick={() => navigate("/assessment/select-type")}
           className="mr-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

@@ -15,6 +15,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/assessment/select-type" component={AssessmentTypePage} />
+      <ProtectedRoute path="/assessment/new/:type" component={AssessmentPage} />
       <ProtectedRoute path="/assessment/:id" component={AssessmentPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
