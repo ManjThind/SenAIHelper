@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import AssessmentPage from "@/pages/assessment-page";
+import InteractiveAssessmentPage from "@/pages/interactive-assessment-page";
 import AssessmentTypePage from "@/pages/assessment-type-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -17,6 +18,7 @@ function Router() {
       <ProtectedRoute path="/assessment/select-type" component={AssessmentTypePage} />
       <ProtectedRoute path="/assessment/new/:type" component={AssessmentPage} />
       <ProtectedRoute path="/assessment/:id" component={AssessmentPage} />
+      <ProtectedRoute path="/assessment/interactive/:id" component={InteractiveAssessmentPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
