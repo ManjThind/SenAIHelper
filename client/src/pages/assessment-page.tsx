@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,8 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
-import { Camera, Mic, Check, Square, Loader2, ArrowLeft } from "lucide-react";
+import { Square, Loader2, ArrowLeft, Camera, Mic, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { initializeFaceDetection, detectFace } from "@/lib/face-detection";
 import { initializeVoiceAnalysis, analyzeAudioStream, VoiceMetrics } from "@/lib/voice-analysis";
 import { Progress } from "@/components/ui/progress";
 
@@ -24,19 +23,14 @@ export default function AssessmentPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [modelsLoaded, setModelsLoaded] = useState(false);
   const [voiceMetrics, setVoiceMetrics] = useState<VoiceMetrics | null>(null);
   const [voiceAnalysisReady, setVoiceAnalysisReady] = useState(false);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
-
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -56,26 +50,6 @@ export default function AssessmentPage() {
       });
     },
   });
-
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        await initializeFaceDetection();
-        setModelsLoaded(true);
-        toast({
-          title: "Ready",
-          description: "Face detection models loaded successfully",
-        });
-      } catch (err) {
-        toast({
-          title: "Model Loading Error",
-          description: "Could not load face detection models",
-          variant: "destructive",
-        });
-      }
-    };
-    loadModels();
-  }, []);
 
   useEffect(() => {
     async function setupVoiceAnalysis() {
@@ -181,60 +155,6 @@ export default function AssessmentPage() {
     }
   };
 
-  useEffect(() => {
-    async function setupCamera() {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
-        setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-      } catch (err) {
-        toast({
-          title: "Camera Error",
-          description: "Could not access camera",
-          variant: "destructive",
-        });
-      }
-    }
-
-    setupCamera();
-    return () => {
-      stream?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
-
-  async function handleCapture() {
-    if (!videoRef.current || !modelsLoaded) return;
-
-    setIsAnalyzing(true);
-    try {
-      const faceData = await detectFace(videoRef.current);
-      if (!faceData) {
-        toast({
-          title: "No Face Detected",
-          description: "Please ensure the subject is facing the camera",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      updateAssessment.mutate({
-        facialAnalysisData: faceData,
-      });
-    } catch (err) {
-      toast({
-        title: "Analysis Error",
-        description: "Could not analyze facial features",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }
-
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center mb-8">
@@ -253,8 +173,8 @@ export default function AssessmentPage() {
           </p>
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Facial Analysis Card */}
         <Card>
           <CardHeader>
             <CardTitle>Facial Analysis</CardTitle>
@@ -262,41 +182,17 @@ export default function AssessmentPage() {
               Capture and analyze facial expressions
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              {isAnalyzing && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
-                </div>
-              )}
-            </div>
+          <CardContent>
             <Button
-              onClick={handleCapture}
+              onClick={() => navigate(`/assessment/${id}/facial`)}
               className="w-full"
-              disabled={!modelsLoaded || isAnalyzing}
             >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Capture Expression
-                </>
-              )}
+              <Camera className="mr-2 h-4 w-4" />
+              Start Facial Analysis
             </Button>
           </CardContent>
         </Card>
 
-        {/* Voice Analysis Card */}
         <Card>
           <CardHeader>
             <CardTitle>Voice Analysis</CardTitle>
@@ -364,11 +260,11 @@ export default function AssessmentPage() {
                 </div>
               )}
 
-              {(assessment?.voiceAnalysisData)?.recordings?.length > 0 && (
+              {assessment?.voiceAnalysisData?.recordings?.length > 0 && (
                 <div className="space-y-2">
                   <Label>Recorded Samples</Label>
                   <div className="space-y-2">
-                    {(assessment.voiceAnalysisData).recordings.map((recording, index) => (
+                    {assessment.voiceAnalysisData.recordings.map((recording, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <audio src={recording} controls className="w-full" />
                       </div>
@@ -380,7 +276,6 @@ export default function AssessmentPage() {
           </CardContent>
         </Card>
 
-        {/* Behavioral Assessment Card */}
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Behavioral Assessment</CardTitle>
