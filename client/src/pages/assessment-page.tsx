@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -14,23 +13,13 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Assessment, QuestionnaireData } from "@shared/schema";
-import { Square, Loader2, ArrowLeft, Camera, Mic, Check } from "lucide-react";
+import { ArrowLeft, Camera, Mic, Brain, Check } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { initializeVoiceAnalysis, analyzeAudioStream, VoiceMetrics } from "@/lib/voice-analysis";
-import { Progress } from "@/components/ui/progress";
 
 export default function AssessmentPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [voiceMetrics, setVoiceMetrics] = useState<VoiceMetrics | null>(null);
-  const [voiceAnalysisReady, setVoiceAnalysisReady] = useState(false);
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
 
   const { data: assessment } = useQuery<Assessment>({
     queryKey: [`/api/assessments/${id}`],
@@ -50,110 +39,6 @@ export default function AssessmentPage() {
       });
     },
   });
-
-  useEffect(() => {
-    async function setupVoiceAnalysis() {
-      try {
-        const { audioContext, analyser } = await initializeVoiceAnalysis();
-        setAudioContext(audioContext);
-        setAnalyser(analyser);
-        setVoiceAnalysisReady(true);
-        toast({
-          title: "Voice Analysis Ready",
-          description: "Voice analysis system initialized successfully",
-        });
-      } catch (err) {
-        toast({
-          title: "Voice Analysis Error",
-          description: "Could not initialize voice analysis",
-          variant: "destructive",
-        });
-      }
-    }
-    setupVoiceAnalysis();
-
-    return () => {
-      if (audioContext) {
-        audioContext.close();
-      }
-    };
-  }, []);
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      if (!audioContext || !analyser) {
-        throw new Error('Voice analysis not initialized');
-      }
-
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-      source.connect(analyser);
-      analyser.connect(processor);
-      processor.connect(audioContext.destination);
-
-      processor.onaudioprocess = async (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        const metrics = await analyzeAudioStream(inputData);
-        setVoiceMetrics(metrics);
-
-        const currentVoiceData = assessment?.voiceAnalysisData || {};
-        updateAssessment.mutate({
-          voiceAnalysisData: {
-            ...currentVoiceData,
-            metrics,
-            recordings: currentVoiceData.recordings || []
-          }
-        });
-      };
-
-      processorRef.current = processor;
-
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          setRecordedChunks((chunks) => [...chunks, event.data]);
-        }
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      toast({
-        title: "Recording Error",
-        description: "Could not start voice recording",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-
-      if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current = null;
-      }
-
-      const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      const currentVoiceData = assessment?.voiceAnalysisData || {};
-      updateAssessment.mutate({
-        voiceAnalysisData: {
-          ...currentVoiceData,
-          recordings: [...(currentVoiceData.recordings || []), audioUrl]
-        }
-      });
-
-      setRecordedChunks([]);
-    }
-  };
 
   return (
     <div className="container mx-auto py-8">
@@ -200,79 +85,32 @@ export default function AssessmentPage() {
               Record and analyze speech patterns
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <Button
-                onClick={isRecording ? stopRecording : startRecording}
-                variant={isRecording ? "destructive" : "default"}
-                className="w-full"
-                disabled={!voiceAnalysisReady}
-              >
-                {isRecording ? (
-                  <>
-                    <Square className="mr-2 h-4 w-4" />
-                    Stop Recording
-                  </>
-                ) : (
-                  <>
-                    <Mic className="mr-2 h-4 w-4" />
-                    Start Recording
-                  </>
-                )}
-              </Button>
+          <CardContent>
+            <Button
+              onClick={() => navigate(`/assessment/${id}/voice`)}
+              className="w-full"
+            >
+              <Mic className="mr-2 h-4 w-4" />
+              Start Voice Analysis
+            </Button>
+          </CardContent>
+        </Card>
 
-              {voiceMetrics && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Volume</span>
-                      <span>{Math.round(voiceMetrics.volume)}%</span>
-                    </div>
-                    <Progress value={voiceMetrics.volume} />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Clarity</span>
-                      <span>{Math.round(voiceMetrics.clarity)}%</span>
-                    </div>
-                    <Progress value={voiceMetrics.clarity} />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Speaking Rate</span>
-                      <p className="font-medium">{voiceMetrics.speakingRate} words/min</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Word Count</span>
-                      <p className="font-medium">{voiceMetrics.wordCount} words</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Pauses</span>
-                      <p className="font-medium">{voiceMetrics.pauseCount} detected</p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">Pitch</span>
-                      <p className="font-medium">{Math.round(voiceMetrics.pitch)}Hz</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {assessment?.voiceAnalysisData?.recordings?.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Recorded Samples</Label>
-                  <div className="space-y-2">
-                    {assessment.voiceAnalysisData.recordings.map((recording, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <audio src={recording} controls className="w-full" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Interactive Analysis</CardTitle>
+            <CardDescription>
+              AI-guided interactive evaluation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={() => navigate(`/assessment/interactive/${id}`)}
+              className="w-full"
+            >
+              <Brain className="mr-2 h-4 w-4" />
+              Start Interactive Analysis
+            </Button>
           </CardContent>
         </Card>
 
