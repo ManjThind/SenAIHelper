@@ -32,7 +32,7 @@ export const assessments = pgTable("assessments", {
   attentionAnalysisData: jsonb("attention_analysis_data"),
   voiceAnalysisData: jsonb("voice_analysis_data"),
   facialAnalysisData: jsonb("facial_analysis_data"),
-  diagnosticData: jsonb("diagnostic_data"),
+  aiDiagnosticData: jsonb("ai_diagnostic_data"), // Fixed column name to match database
 });
 
 // Reports table
@@ -94,7 +94,7 @@ export const ownedItems = pgTable("owned_items", {
   isActive: boolean("is_active").notNull().default(true),
 });
 
-// Define interfaces and types first
+// Define AvatarConfig interface
 export interface AvatarConfig {
   type: string;
   color: string;
@@ -112,12 +112,6 @@ export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["parent", "professional", "admin"]).default("parent"),
 });
 
-// Create assessment insert schema
-export const insertAssessmentSchema = createInsertSchema(assessments);
-
-// Create report insert schema
-export const insertReportSchema = createInsertSchema(reports);
-
 // Add insertChildSchema after the other schemas
 export const insertChildSchema = createInsertSchema(children, {
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -134,6 +128,12 @@ export const insertChildSchema = createInsertSchema(children, {
     effect: z.string().optional()
   }).optional(),
 });
+
+// Create assessment insert schema
+export const insertAssessmentSchema = createInsertSchema(assessments);
+
+// Create report insert schema
+export const insertReportSchema = createInsertSchema(reports);
 
 // Add relations for shop items and owned items
 export const ownedItemsRelations = relations(ownedItems, ({ one }) => ({
@@ -180,6 +180,8 @@ export const insertShopItemSchema = createInsertSchema(shopItems);
 export const insertOwnedItemSchema = createInsertSchema(ownedItems);
 
 // Export types
+export type Child = typeof children.$inferSelect;
+export type InsertChild = typeof children.$inferInsert;
 export type Assessment = typeof assessments.$inferSelect;
 export type InsertAssessment = typeof assessments.$inferInsert;
 export type Report = typeof reports.$inferSelect;
