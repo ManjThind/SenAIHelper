@@ -30,21 +30,26 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+// Generate a random token for password reset
+function generateResetToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
 export function setupAuth(app: Express) {
   const PostgresSessionStore = connectPg(session);
 
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "sen-assessment-secret", // Using a default secret for development, but prioritize env variable
+    secret: process.env.SESSION_SECRET || "sen-assessment-secret",
     resave: false,
     saveUninitialized: false,
     store: new PostgresSessionStore({
       pool,
-      tableName: 'session', // Updated to match the created table name
-      createTableIfMissing: true // Allow creating the table if it doesn't exist
+      tableName: 'session',
+      createTableIfMissing: true
     }),
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       httpOnly: true,
       sameSite: 'lax'
     },
@@ -79,6 +84,59 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Password reset request endpoint
+  app.post("/api/request-password-reset", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        // Don't reveal whether the email exists
+        return res.status(200).json({ 
+          message: "If an account exists with this email, you will receive password reset instructions." 
+        });
+      }
+
+      const resetToken = generateResetToken();
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      await storage.saveResetToken(user.id, resetToken, resetTokenExpiry);
+
+      // TODO: Send email with reset link
+      // For now, just return the token (in production, this should be sent via email)
+      res.status(200).json({ 
+        message: "If an account exists with this email, you will receive password reset instructions.",
+        // Remove this in production:
+        debug: { resetToken }
+      });
+    } catch (error) {
+      console.error("Password reset request error:", error);
+      res.status(500).json({ message: "Error processing password reset request" });
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      const resetRequest = await storage.getResetToken(token);
+
+      if (!resetRequest || resetRequest.expiry < new Date()) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updateUserPassword(resetRequest.userId, hashedPassword);
+      await storage.deleteResetToken(token);
+
+      res.status(200).json({ message: "Password successfully reset" });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({ message: "Error resetting password" });
+    }
+  });
+
   app.post("/api/register", async (req, res, next) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -108,10 +166,8 @@ export function setupAuth(app: Express) {
       req.login(user, (err) => {
         if (err) return next(err);
         if (req.body.rememberMe) {
-          // If rememberMe is true, the session will last for 30 days
           req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000;
         } else {
-          // Otherwise, it will last until the browser closes
           req.session.cookie.maxAge = undefined;
         }
         res.status(200).json(user);

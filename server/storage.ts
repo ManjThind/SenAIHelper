@@ -1,4 +1,4 @@
-import { User, Assessment, Report, InsertUser, Child, InsertChild, children, users, assessments, reports } from "@shared/schema";
+import { User, Assessment, Report, InsertUser, Child, InsertChild, children, users, assessments, reports, passwordResetTokens } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -11,7 +11,12 @@ export interface IStorage {
   sessionStore: session.Store;
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserPassword(userId: number, newPassword: string): Promise<void>;
+  saveResetToken(userId: number, token: string, expiry: Date): Promise<void>;
+  getResetToken(token: string): Promise<{ userId: number; expiry: Date } | undefined>;
+  deleteResetToken(token: string): Promise<void>;
   createChild(child: InsertChild): Promise<Child>;
   getChildrenByParentId(parentId: number): Promise<Child[]>;
   createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment>;
@@ -19,7 +24,7 @@ export interface IStorage {
   updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment>;
   createReport(report: Omit<Report, "id">): Promise<Report>;
   getReportByAssessmentId(assessmentId: number): Promise<Report | undefined>;
-  getAllReports(): Promise<Report[]>; // Add new method
+  getAllReports(): Promise<Report[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -42,9 +47,41 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async createUser(user: InsertUser): Promise<User> {
     const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
+  }
+
+  async updateUserPassword(userId: number, newPassword: string): Promise<void> {
+    await db.update(users)
+      .set({ password: newPassword })
+      .where(eq(users.id, userId));
+  }
+
+  async saveResetToken(userId: number, token: string, expiry: Date): Promise<void> {
+    await db.insert(passwordResetTokens)
+      .values({ userId, token, expiry })
+      .onConflictDoUpdate({
+        target: [passwordResetTokens.userId],
+        set: { token, expiry }
+      });
+  }
+
+  async getResetToken(token: string): Promise<{ userId: number; expiry: Date } | undefined> {
+    const [resetToken] = await db.select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    return resetToken;
+  }
+
+  async deleteResetToken(token: string): Promise<void> {
+    await db.delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
   }
 
   async createChild(child: InsertChild): Promise<Child> {
