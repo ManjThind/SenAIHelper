@@ -34,6 +34,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Save, Loader2, Check, AlertCircle } from "lucide-react";
 import { AvatarPreview } from "@/components/ui/avatar-preview";
 import { useAuth } from "@/hooks/use-auth";
+import { Subscription } from "@/lib/utils";
 
 // Avatar options remain the same
 const avatarTypes = [
@@ -97,7 +98,7 @@ export default function ChildDetailsPage() {
   const { isValid, isDirty, errors } = form.formState;
 
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = form.watch((value: Partial<InsertChild>) => {
       if (value.avatar) {
         setPreviewConfig({
           type: value.avatar.type || defaultAvatar.type,
@@ -106,7 +107,7 @@ export default function ChildDetailsPage() {
           name: value.avatar.name || defaultAvatar.name,
         });
       }
-    });
+    }) as Subscription;
     return () => subscription.unsubscribe();
   }, [form.watch, selectedAccessories]);
 

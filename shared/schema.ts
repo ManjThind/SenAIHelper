@@ -60,6 +60,40 @@ export const children = pgTable("children", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Define AIDiagnosticData interface
+export interface AIDiagnosticData {
+  score: number;
+  confidence: number;
+  areas: {
+    attention: number;
+    behavior: number;
+    cognitive: number;
+    social: number;
+  };
+  recommendations: string[];
+  timestamp: string;
+}
+
+// Shop Items table
+export const shopItems = pgTable("shop_items", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'accessory', 'effect', etc.
+  price: integer("price").notNull(),
+  previewImage: text("preview_image"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Owned Items table (for purchased items)
+export const ownedItems = pgTable("owned_items", {
+  id: serial("id").primaryKey(),
+  childId: integer("child_id").notNull(),
+  itemId: integer("item_id").notNull(),
+  purchaseDate: timestamp("purchase_date").notNull().defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
 // Define interfaces and types first
 export interface AvatarConfig {
   type: string;
@@ -83,6 +117,35 @@ export const insertAssessmentSchema = createInsertSchema(assessments);
 
 // Create report insert schema
 export const insertReportSchema = createInsertSchema(reports);
+
+// Add insertChildSchema after the other schemas
+export const insertChildSchema = createInsertSchema(children, {
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  dateOfBirth: z.coerce.date(),
+  gender: z.enum(["male", "female", "other"]),
+  medicalHistory: z.object({}).passthrough().optional(),
+  schoolInformation: z.object({}).passthrough().optional(),
+  avatar: z.object({
+    type: z.string(),
+    color: z.string(),
+    accessories: z.array(z.string()),
+    name: z.string(),
+    effect: z.string().optional()
+  }).optional(),
+});
+
+// Add relations for shop items and owned items
+export const ownedItemsRelations = relations(ownedItems, ({ one }) => ({
+  child: one(children, {
+    fields: [ownedItems.childId],
+    references: [children.id],
+  }),
+  item: one(shopItems, {
+    fields: [ownedItems.itemId],
+    references: [shopItems.id],
+  }),
+}));
 
 // Add relations
 export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
@@ -112,6 +175,10 @@ export const assessmentsRelations = relations(assessments, ({ one }) => ({
   }),
 }));
 
+// Create insert schemas for new tables
+export const insertShopItemSchema = createInsertSchema(shopItems);
+export const insertOwnedItemSchema = createInsertSchema(ownedItems);
+
 // Export types
 export type Assessment = typeof assessments.$inferSelect;
 export type InsertAssessment = typeof assessments.$inferInsert;
@@ -119,3 +186,7 @@ export type Report = typeof reports.$inferSelect;
 export type InsertReport = typeof reports.$inferInsert;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+export type ShopItem = typeof shopItems.$inferSelect;
+export type InsertShopItem = typeof shopItems.$inferInsert;
+export type OwnedItem = typeof ownedItems.$inferSelect;
+export type InsertOwnedItem = typeof ownedItems.$inferInsert;
