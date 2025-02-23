@@ -60,7 +60,7 @@ export const children = pgTable("children", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Define interfaces and types
+// Define interfaces and types first
 export interface AvatarConfig {
   type: string;
   color: string;
@@ -92,6 +92,15 @@ export const passwordResetTokensRelations = relations(passwordResetTokens, ({ on
   }),
 }));
 
+// First define the reports relations
+export const reportsRelations = relations(reports, ({ one }) => ({
+  assessment: one(assessments, {
+    fields: [reports.assessmentId],
+    references: [assessments.id],
+  }),
+}));
+
+// Then define the assessments relations that reference reports
 export const assessmentsRelations = relations(assessments, ({ one }) => ({
   user: one(users, {
     fields: [assessments.userId],
@@ -100,10 +109,6 @@ export const assessmentsRelations = relations(assessments, ({ one }) => ({
   child: one(children, {
     fields: [assessments.childId],
     references: [children.id],
-  }),
-  report: one(reports, {
-    fields: [reports.assessmentId],
-    references: [assessments.id],
   }),
 }));
 

@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import * as z from 'zod';
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -38,6 +39,19 @@ export default function AuthPage() {
     },
   });
 
+  // Add Zod schema for password reset validation
+  const resetPasswordSchema = z.object({
+    password: z.string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string()
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
   const resetPasswordForm = useForm({
     defaultValues: {
       email: "",
@@ -45,6 +59,7 @@ export default function AuthPage() {
   });
 
   const newPasswordForm = useForm({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
@@ -272,14 +287,6 @@ export default function AuthPage() {
                 ) : (
                   <form
                     onSubmit={newPasswordForm.handleSubmit((data) => {
-                      if (data.password !== data.confirmPassword) {
-                        toast({
-                          title: "Error",
-                          description: "Passwords do not match",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
                       resetPasswordMutation.mutate({ 
                         token: resetToken,
                         newPassword: data.password 
@@ -295,6 +302,11 @@ export default function AuthPage() {
                         {...newPasswordForm.register("password")}
                         required
                       />
+                      {newPasswordForm.formState.errors.password && (
+                        <p className="text-sm text-destructive">
+                          {newPasswordForm.formState.errors.password.message}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -304,6 +316,11 @@ export default function AuthPage() {
                         {...newPasswordForm.register("confirmPassword")}
                         required
                       />
+                      {newPasswordForm.formState.errors.confirmPassword && (
+                        <p className="text-sm text-destructive">
+                          {newPasswordForm.formState.errors.confirmPassword.message}
+                        </p>
+                      )}
                     </div>
                     <Button
                       type="submit"
