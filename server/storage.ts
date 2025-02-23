@@ -1,4 +1,4 @@
-import { User, Assessment, Report, InsertUser, Child, InsertChild, children, users, assessments, reports, passwordResetTokens } from "@shared/schema";
+import { users, assessments, reports, children, passwordResetTokens, type Assessment, type Report } from "@shared/schema";
 import session from "express-session";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -9,16 +9,16 @@ const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   sessionStore: session.Store;
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getUser(id: number): Promise<typeof users.$inferSelect | undefined>;
+  getUserByUsername(username: string): Promise<typeof users.$inferSelect | undefined>;
+  getUserByEmail(email: string): Promise<typeof users.$inferSelect | undefined>;
+  createUser(user: typeof users.$inferInsert): Promise<typeof users.$inferSelect>;
   updateUserPassword(userId: number, newPassword: string): Promise<void>;
   saveResetToken(userId: number, token: string, expiry: Date): Promise<void>;
   getResetToken(token: string): Promise<{ userId: number; expiry: Date } | undefined>;
   deleteResetToken(token: string): Promise<void>;
-  createChild(child: InsertChild): Promise<Child>;
-  getChildrenByParentId(parentId: number): Promise<Child[]>;
+  createChild(child: typeof children.$inferInsert): Promise<typeof children.$inferSelect>;
+  getChildrenByParentId(parentId: number): Promise<typeof children.$inferSelect[]>;
   createAssessment(assessment: Omit<Assessment, "id">): Promise<Assessment>;
   getAssessmentsByUserId(userId: number): Promise<Assessment[]>;
   updateAssessment(id: number, update: Partial<Assessment>): Promise<Assessment>;
@@ -37,22 +37,22 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: number): Promise<typeof users.$inferSelect | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<typeof users.$inferSelect | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<typeof users.$inferSelect | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
-  async createUser(user: InsertUser): Promise<User> {
+  async createUser(user: typeof users.$inferInsert): Promise<typeof users.$inferSelect> {
     const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
   }
@@ -84,54 +84,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(passwordResetTokens.token, token));
   }
 
-  async createChild(child: InsertChild): Promise<Child> {
-    try {
-      const dateOfBirth = new Date(child.dateOfBirth);
-      if (isNaN(dateOfBirth.getTime())) {
-        throw new Error("Invalid date of birth format");
-      }
-
-      if (!child.firstName?.trim()) throw new Error("First name is required");
-      if (!child.lastName?.trim()) throw new Error("Last name is required");
-      if (!child.gender?.trim()) throw new Error("Gender is required");
-      if (!child.parentId) throw new Error("Parent ID is required");
-
-      const [newChild] = await db
-        .insert(children)
-        .values({
-          firstName: child.firstName.trim(),
-          lastName: child.lastName.trim(),
-          gender: child.gender.trim(),
-          parentId: child.parentId,
-          dateOfBirth,
-          medicalHistory: child.medicalHistory || {},
-          schoolInformation: child.schoolInformation || {},
-          avatar: child.avatar || {
-            type: "robot",
-            color: "blue",
-            accessories: [],
-            name: "",
-          },
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-
-      if (!newChild) {
-        throw new Error("Failed to create child record");
-      }
-
-      return newChild;
-    } catch (error) {
-      console.error("Child creation error:", error);
-      if (error instanceof Error) {
-        throw new Error(`Child creation failed: ${error.message}`);
-      }
-      throw new Error("Failed to create child profile");
-    }
+  async createChild(child: typeof children.$inferInsert): Promise<typeof children.$inferSelect> {
+    const [newChild] = await db.insert(children).values(child).returning();
+    return newChild;
   }
 
-  async getChildrenByParentId(parentId: number): Promise<Child[]> {
+  async getChildrenByParentId(parentId: number): Promise<typeof children.$inferSelect[]> {
     return db.select().from(children).where(eq(children.parentId, parentId));
   }
 

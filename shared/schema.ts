@@ -20,6 +20,31 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   expiry: timestamp("expiry").notNull(),
 });
 
+// Assessments table
+export const assessments = pgTable("assessments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  childId: integer("child_id").notNull(),
+  status: text("status").notNull(),
+  dateCreated: timestamp("date_created").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  writingAnalysisData: jsonb("writing_analysis_data"),
+  attentionAnalysisData: jsonb("attention_analysis_data"),
+  voiceAnalysisData: jsonb("voice_analysis_data"),
+  facialAnalysisData: jsonb("facial_analysis_data"),
+  diagnosticData: jsonb("diagnostic_data"),
+});
+
+// Reports table
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  assessmentId: integer("assessment_id").notNull().unique(),
+  dateGenerated: timestamp("date_generated").notNull(),
+  findings: jsonb("findings").notNull(),
+  recommendations: jsonb("recommendations").notNull(),
+  score: integer("score").notNull(),
+});
+
 // Children table
 export const children = pgTable("children", {
   id: serial("id").primaryKey(),
@@ -35,7 +60,7 @@ export const children = pgTable("children", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Add avatar interface
+// Define interfaces and types
 export interface AvatarConfig {
   type: string;
   color: string;
@@ -43,7 +68,6 @@ export interface AvatarConfig {
   name: string;
   effect?: string;
 }
-
 
 // Update the insertUserSchema to include email validation
 export const insertUserSchema = createInsertSchema(users, {
@@ -54,8 +78,13 @@ export const insertUserSchema = createInsertSchema(users, {
   role: z.enum(["parent", "professional", "admin"]).default("parent"),
 });
 
+// Create assessment insert schema
+export const insertAssessmentSchema = createInsertSchema(assessments);
 
-// Add relations for password reset tokens
+// Create report insert schema
+export const insertReportSchema = createInsertSchema(reports);
+
+// Add relations
 export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
   user: one(users, {
     fields: [passwordResetTokens.userId],
@@ -63,6 +92,25 @@ export const passwordResetTokensRelations = relations(passwordResetTokens, ({ on
   }),
 }));
 
-// Export types for password reset
+export const assessmentsRelations = relations(assessments, ({ one }) => ({
+  user: one(users, {
+    fields: [assessments.userId],
+    references: [users.id],
+  }),
+  child: one(children, {
+    fields: [assessments.childId],
+    references: [children.id],
+  }),
+  report: one(reports, {
+    fields: [reports.assessmentId],
+    references: [assessments.id],
+  }),
+}));
+
+// Export types
+export type Assessment = typeof assessments.$inferSelect;
+export type InsertAssessment = typeof assessments.$inferInsert;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
